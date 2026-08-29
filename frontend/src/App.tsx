@@ -397,6 +397,7 @@ export const App: React.FC = () => {
 
       {showAuthModal && (
         <AuthModal
+          currentUser={currentUser}
           onClose={() => setShowAuthModal(false)}
           onLoginSuccess={(user, token) => {
             setCurrentUser(user);

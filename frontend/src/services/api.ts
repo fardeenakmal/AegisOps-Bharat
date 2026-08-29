@@ -247,3 +247,45 @@ export async function fetchExternalFeedsStatus() {
   if (!res.ok) throw new Error('Failed to fetch external feeds status');
   return res.json();
 }
+
+// Authentication & Citizen Registration API
+export async function loginUser(payload: { username: string; password?: string }) {
+  const res = await fetch(`${API_BASE}/auth/login`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload)
+  });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}));
+    throw new Error(err.error || 'Authentication failed');
+  }
+  return res.json();
+}
+
+export async function registerCitizen(payload: {
+  fullName: string;
+  username?: string;
+  email?: string;
+  password?: string;
+  phoneNumber?: string;
+  zoneId?: string;
+  role?: string;
+}) {
+  const res = await fetch(`${API_BASE}/auth/register`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload)
+  });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}));
+    throw new Error(err.error || 'Registration failed');
+  }
+  return res.json();
+}
+
+export async function fetchDemoTokens() {
+  const res = await fetch(`${API_BASE}/auth/demo-tokens`);
+  if (!res.ok) throw new Error('Failed to fetch demo accounts');
+  return res.json();
+}
+
