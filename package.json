@@ -1,0 +1,25 @@
+{
+  "name": "ai-powered-emergency-response-platform",
+  "version": "1.0.0",
+  "description": "Production-grade AI-Powered Emergency Response & Disaster Coordination Platform",
+  "scripts": {
+    "dev:backend": "cd backend && npm run dev",
+    "dev:frontend": "cd frontend && npm run dev",
+    "build:backend": "cd backend && npm run build",
+    "build:frontend": "cd frontend && npm run build",
+    "test:backend": "cd backend && npm test",
+    "docker:up": "docker compose up --build",
+    "docker:down": "docker compose down"
+  },
+  "keywords": [
+    "disaster-management",
+    "emergency-response",
+    "ai-triage",
+    "nlp",
+    "computer-vision",
+    "gis",
+    "leaflet",
+    "postgis",
+    "realtime"
+  ]
+}

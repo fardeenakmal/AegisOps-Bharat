@@ -1,0 +1,21 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: aegisops-config
+  namespace: aegisops-production
+data:
+  PORT: "4000"
+  NODE_ENV: "production"
+  DATABASE_URL: "postgres://emergency_user:emergency_secure_pass_2026@postgres-service:5432/emergency_db"
+  REDIS_URL: "redis://redis-service:6379"
+  DEFAULT_ZONE: "zone-city-1"
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: aegisops-secrets
+  namespace: aegisops-production
+type: Opaque
+stringData:
+  JWT_SECRET: "aegisops-production-enterprise-jwt-signing-secret-key-2026-v2"
+  POSTGRES_PASSWORD: "emergency_secure_pass_2026"
