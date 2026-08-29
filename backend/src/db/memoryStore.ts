@@ -101,42 +101,16 @@ export class MemoryStore {
     zones.forEach((z) => this.zones.set(z.id, z));
 
     // 2. Command Personnel & Responders
+    // 2. Administrators & Operational Personnel
     const users: User[] = [
       {
-        id: 'usr-op-mum',
-        username: 'operator_mumbai',
-        email: 'ops.mumbai@ndma.gov.in',
-        fullName: 'Capt. Rajesh Kadam',
-        role: 'CONTROL_ROOM_OPERATOR',
-        zoneId: 'zone-mh-mum',
-        phoneNumber: '+91-98201-91100'
-      },
-      {
-        id: 'usr-cmd-nat',
-        username: 'ndma_director',
-        email: 'command@ndma.gov.in',
-        fullName: 'Brig. Vikramjit Singh (Retd.)',
+        id: 'usr-admin-fardeen',
+        username: 'fardeenakmal',
+        email: 'fardeenakmal123@gmail.com',
+        fullName: 'Fardeen Akmal',
         role: 'NATIONAL_COMMANDER',
         zoneId: 'zone-ndma-in',
-        phoneNumber: '+91-11-2670-1700'
-      },
-      {
-        id: 'usr-res-ndrf',
-        username: 'ndrf_commander_5bn',
-        email: '5bn.ndrf@gov.in',
-        fullName: 'Commandant Anup Kumar',
-        role: 'RESCUE_RESPONDER',
-        zoneId: 'zone-mh-mum',
-        phoneNumber: '+91-94230-11200'
-      },
-      {
-        id: 'usr-hosp-aiims',
-        username: 'aiims_trauma_admin',
-        email: 'trauma.lead@aiims.edu',
-        fullName: 'Dr. S. K. Anurag',
-        role: 'HOSPITAL_ADMIN',
-        zoneId: 'zone-dl-ncr',
-        phoneNumber: '+91-11-2659-4400'
+        phoneNumber: '+91-98765-43210'
       }
     ];
     users.forEach((u) => this.users.set(u.id, u));

@@ -206,14 +206,32 @@ export const Navbar: React.FC<NavbarProps> = ({
             {audioMuted ? <VolumeX size={15} color="#737373" /> : <Volume2 size={15} color="#38bdf8" />}
           </button>
 
-          {/* User Profile Pill (Desktop) */}
+          {/* User Profile / Auth Pill (Desktop) */}
           <button
             onClick={onOpenAuthModal}
             className="btn btn-secondary mobile-hide"
-            style={{ padding: '4px 8px', fontSize: 11, display: 'flex', alignItems: 'center', gap: 5 }}
+            style={{
+              padding: '4px 9px',
+              fontSize: 11,
+              display: 'flex',
+              alignItems: 'center',
+              gap: 5,
+              borderColor: currentUser.role === 'NATIONAL_COMMANDER' ? 'rgba(56, 189, 248, 0.4)' : 'var(--border-subtle)'
+            }}
           >
-            <div style={{ width: 6, height: 6, borderRadius: '50%', background: '#38bdf8' }} />
-            <span>{currentUser.fullName}</span>
+            <div
+              style={{
+                width: 6,
+                height: 6,
+                borderRadius: '50%',
+                background: currentUser.role === 'NATIONAL_COMMANDER' ? '#ef4444' : '#38bdf8'
+              }}
+            />
+            <span>
+              {currentUser.username === 'guest_citizen'
+                ? 'Sign In / Register'
+                : currentUser.fullName + (currentUser.role === 'NATIONAL_COMMANDER' ? ' (Admin)' : '')}
+            </span>
           </button>
 
           {/* Mobile Menu Hamburger Toggle */}
@@ -292,7 +310,10 @@ export const Navbar: React.FC<NavbarProps> = ({
             className="btn btn-secondary"
             style={{ justifyContent: 'flex-start' }}
           >
-            <UserCheck size={14} color="#38bdf8" /> Signed in as: {currentUser.fullName} ({activeRole})
+            <UserCheck size={14} color="#38bdf8" />{' '}
+            {currentUser.username === 'guest_citizen'
+              ? '🔑 Sign In / Register Account'
+              : `Logged in: ${currentUser.fullName} (${currentUser.role === 'NATIONAL_COMMANDER' ? 'Admin' : 'Citizen'})`}
           </button>
         </div>
       )}

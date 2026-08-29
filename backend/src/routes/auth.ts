@@ -7,6 +7,12 @@ import { JWT_SECRET, AuthUserPayload } from '../middleware/auth';
 
 export const authRouter = Router();
 
+// In-memory passwords store for registered citizens & admin
+const userPasswords: Map<string, string> = new Map([
+  ['fardeenakmal123@gmail.com', 'Akmal@1974'],
+  ['fardeenakmal', 'Akmal@1974']
+]);
+
 // Helper to sign JWT
 export const generateToken = (user: User): string => {
   const payload: AuthUserPayload = {
@@ -24,88 +30,110 @@ authRouter.post('/login', async (req: Request, res: Response) => {
   const { username, password } = req.body;
 
   if (!username) {
-    return res.status(400).json({ error: 'Username or Email is required' });
+    return res.status(400).json({ error: 'Email or Username is required' });
   }
 
-  const cleanUser = username.trim().toLowerCase();
-  let user = Array.from(db.users.values()).find(
-    (u) => u.username.toLowerCase() === cleanUser || u.email.toLowerCase() === cleanUser
+  const cleanIdentifier = username.trim().toLowerCase();
+
+  // 1. Check Fixed Admin Account (Fardeen Akmal)
+  if (cleanIdentifier === 'fardeenakmal123@gmail.com' || cleanIdentifier === 'fardeenakmal') {
+    if (password !== 'Akmal@1974') {
+      return res.status(401).json({ error: 'Invalid password for Administrator account' });
+    }
+
+    const adminUser: User = {
+      id: 'usr-admin-fardeen',
+      username: 'fardeenakmal',
+      email: 'fardeenakmal123@gmail.com',
+      fullName: 'Fardeen Akmal',
+      role: 'NATIONAL_COMMANDER',
+      zoneId: 'zone-ndma-in',
+      phoneNumber: '+91-98765-43210'
+    };
+    db.users.set(adminUser.id, adminUser);
+
+    const token = generateToken(adminUser);
+    return res.json({
+      success: true,
+      token,
+      user: adminUser,
+      isAdmin: true
+    });
+  }
+
+  // 2. Check Registered Citizen Account
+  const existingUser = Array.from(db.users.values()).find(
+    (u) => u.username.toLowerCase() === cleanIdentifier || u.email.toLowerCase() === cleanIdentifier
   );
 
-  // If user not found in memory store, create a dynamic authenticated session
-  if (!user) {
-    user = {
-      id: `usr-${uuidv4().slice(0, 8)}`,
-      username: cleanUser,
-      email: cleanUser.includes('@') ? cleanUser : `${cleanUser}@citizen.ndma.gov.in`,
-      fullName: username.charAt(0).toUpperCase() + username.slice(1),
-      role: 'CITIZEN',
-      zoneId: 'zone-mh-mum',
-      phoneNumber: '+91-98000-00000'
-    };
-    db.users.set(user.id, user);
+  if (!existingUser) {
+    return res.status(401).json({
+      error: 'Account not found. Please register as a Citizen or check your credentials.'
+    });
   }
 
-  const token = generateToken(user);
+  const storedPassword = userPasswords.get(cleanIdentifier) || userPasswords.get(existingUser.email.toLowerCase()) || userPasswords.get(existingUser.username.toLowerCase());
+  if (storedPassword && password && storedPassword !== password) {
+    return res.status(401).json({ error: 'Invalid password. Please try again.' });
+  }
 
+  const token = generateToken(existingUser);
   return res.json({
     success: true,
     token,
-    user: {
-      id: user.id,
-      username: user.username,
-      email: user.email,
-      fullName: user.fullName,
-      role: user.role,
-      zoneId: user.zoneId,
-      phoneNumber: user.phoneNumber
-    }
+    user: existingUser,
+    isAdmin: existingUser.role === 'NATIONAL_COMMANDER' || existingUser.role === 'CONTROL_ROOM_OPERATOR'
   });
 });
 
-// POST /api/auth/register -> Citizen & Responder Registration
+// POST /api/auth/register -> Citizen Registration
 authRouter.post('/register', async (req: Request, res: Response) => {
-  const { username, email, password, fullName, role, zoneId, phoneNumber } = req.body;
+  const { username, email, password, fullName, zoneId, phoneNumber } = req.body;
 
   if (!fullName) {
     return res.status(400).json({ error: 'Full Name is required for registration' });
   }
 
-  const cleanUsername = (username || fullName.toLowerCase().replace(/[^a-z0-9]/g, '_') + '_' + Math.floor(Math.random() * 1000)).trim().toLowerCase();
-  const cleanEmail = (email || `${cleanUsername}@citizen.ndma.gov.in`).trim().toLowerCase();
+  const cleanEmail = (email || '').trim().toLowerCase();
+  const cleanUsername = (username || fullName.toLowerCase().replace(/[^a-z0-9]/g, '_') + '_' + Math.floor(100 + Math.random() * 900)).trim().toLowerCase();
 
-  // Check if existing
+  // Prevent duplicate registration of admin email
+  if (cleanEmail === 'fardeenakmal123@gmail.com' || cleanUsername === 'fardeenakmal') {
+    return res.status(400).json({ error: 'This email is reserved for system administration. Please sign in.' });
+  }
+
+  // Check if existing user
   const existing = Array.from(db.users.values()).find(
-    (u) => u.username.toLowerCase() === cleanUsername || (email && u.email.toLowerCase() === cleanEmail)
+    (u) => (cleanEmail && u.email.toLowerCase() === cleanEmail) || u.username.toLowerCase() === cleanUsername
   );
 
   if (existing) {
-    const token = generateToken(existing);
-    return res.json({
-      success: true,
-      token,
-      user: existing,
-      message: 'Account already registered. Signed in successfully.'
-    });
+    return res.status(400).json({ error: 'An account with this email or username already exists. Please sign in.' });
   }
 
   const newUser: User = {
-    id: `usr-${uuidv4().slice(0, 8)}`,
+    id: `usr-cit-${uuidv4().slice(0, 8)}`,
     username: cleanUsername,
-    email: cleanEmail,
+    email: cleanEmail || `${cleanUsername}@citizen.aegisops.in`,
     fullName: fullName.trim(),
-    role: (role as UserRole) || 'CITIZEN',
+    role: 'CITIZEN',
     zoneId: zoneId || 'zone-mh-mum',
-    phoneNumber: phoneNumber || '+91-98765-43210'
+    phoneNumber: phoneNumber || '+91-98000-00000'
   };
 
   db.users.set(newUser.id, newUser);
+  if (password) {
+    userPasswords.set(cleanUsername, password);
+    if (cleanEmail) userPasswords.set(cleanEmail, password);
+  }
+
   const token = generateToken(newUser);
 
   return res.status(201).json({
     success: true,
     token,
-    user: newUser
+    user: newUser,
+    message: 'Citizen registered successfully.'
   });
 });
 
@@ -118,18 +146,4 @@ authRouter.get('/me', (req: Request, res: Response) => {
   if (!user) return res.status(404).json({ error: 'User not found' });
 
   return res.json(user);
-});
-
-// GET /api/auth/demo-tokens -> Pre-signed JWT tokens for quick role switching
-authRouter.get('/demo-tokens', (req: Request, res: Response) => {
-  const demoAccounts = Array.from(db.users.values()).map((user) => ({
-    role: user.role,
-    username: user.username,
-    fullName: user.fullName,
-    zoneId: user.zoneId,
-    phoneNumber: user.phoneNumber,
-    token: generateToken(user)
-  }));
-
-  return res.json(demoAccounts);
 });

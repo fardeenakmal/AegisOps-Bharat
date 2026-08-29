@@ -23,13 +23,25 @@ import {
 import { Incident, Resource, Hospital, PredictionAlert, UserRole } from './types';
 
 export const App: React.FC = () => {
-  const [currentUser, setCurrentUser] = useState<any>({
-    username: 'operator_mumbai',
-    fullName: 'Capt. Rajesh Kadam',
-    role: 'CONTROL_ROOM_OPERATOR',
-    zoneId: 'zone-mh-mum'
+  const [currentUser, setCurrentUser] = useState<any>(() => {
+    try {
+      const saved = localStorage.getItem('aegisops_user');
+      if (saved) return JSON.parse(saved);
+    } catch {}
+    return {
+      username: 'guest_citizen',
+      fullName: 'Public Citizen (Guest)',
+      role: 'CITIZEN',
+      zoneId: 'zone-ndma-in'
+    };
   });
-  const [activeRole, setActiveRole] = useState<UserRole>('CONTROL_ROOM_OPERATOR');
+  const [activeRole, setActiveRole] = useState<UserRole>(() => {
+    try {
+      const saved = localStorage.getItem('aegisops_user');
+      if (saved) return JSON.parse(saved).role || 'CITIZEN';
+    } catch {}
+    return 'CITIZEN';
+  });
   const [activeZone, setActiveZone] = useState<string>('zone-ndma-in');
   const [activeView, setActiveView] = useState<'dashboard' | 'responder' | 'hospital' | 'command' | 'public-report'>('dashboard');
 
@@ -403,6 +415,11 @@ export const App: React.FC = () => {
             setCurrentUser(user);
             setActiveRole(user.role);
             if (user.zoneId) setActiveZone(user.zoneId);
+            if (token) {
+              localStorage.setItem('aegisops_user', JSON.stringify(user));
+            } else {
+              localStorage.removeItem('aegisops_user');
+            }
             loadAllData();
           }}
         />

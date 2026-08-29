@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import {
   X,
   Lock,
@@ -6,7 +6,6 @@ import {
   Shield,
   Key,
   CheckCircle2,
-  Sparkles,
   UserPlus,
   LogIn,
   Phone,
@@ -14,13 +13,10 @@ import {
   MapPin,
   Loader2,
   LogOut,
-  Radio,
-  Building,
-  Globe,
-  Activity
+  AlertTriangle,
+  Sparkles
 } from 'lucide-react';
-import { UserRole } from '../types';
-import { loginUser, registerCitizen, fetchDemoTokens } from '../services/api';
+import { loginUser, registerCitizen } from '../services/api';
 
 interface AuthModalProps {
   onClose: () => void;
@@ -33,12 +29,10 @@ export const AuthModal: React.FC<AuthModalProps> = ({
   onLoginSuccess,
   currentUser
 }) => {
-  const [activeTab, setActiveTab] = useState<'quick' | 'signin' | 'register'>('quick');
-  const [demoAccounts, setDemoAccounts] = useState<any[]>([]);
-  const [loadingDemo, setLoadingDemo] = useState(false);
+  const [activeTab, setActiveTab] = useState<'signin' | 'register'>('signin');
 
   // Sign In Form State
-  const [username, setUsername] = useState('');
+  const [identifier, setIdentifier] = useState('');
   const [password, setPassword] = useState('');
   const [isSigningIn, setIsSigningIn] = useState(false);
   const [signInError, setSignInError] = useState<string | null>(null);
@@ -52,30 +46,26 @@ export const AuthModal: React.FC<AuthModalProps> = ({
   const [isRegistering, setIsRegistering] = useState(false);
   const [regError, setRegError] = useState<string | null>(null);
 
-  useEffect(() => {
-    setLoadingDemo(true);
-    fetchDemoTokens()
-      .then((data) => setDemoAccounts(data))
-      .catch((err) => console.error('Failed to load demo roles:', err))
-      .finally(() => setLoadingDemo(false));
-  }, []);
-
   const handleSignIn = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!username.trim()) {
-      setSignInError('Please enter a username or email');
+    if (!identifier.trim()) {
+      setSignInError('Please enter your email or username');
+      return;
+    }
+    if (!password) {
+      setSignInError('Please enter your password');
       return;
     }
 
     setIsSigningIn(true);
     setSignInError(null);
     try {
-      const data = await loginUser({ username: username.trim(), password });
+      const data = await loginUser({ username: identifier.trim(), password });
       localStorage.setItem('aegisops_jwt', data.token);
       onLoginSuccess(data.user, data.token);
       onClose();
     } catch (err: any) {
-      setSignInError(err.message || 'Login failed. Please check credentials.');
+      setSignInError(err.message || 'Login failed. Please verify credentials.');
     } finally {
       setIsSigningIn(false);
     }
@@ -84,7 +74,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!regFullName.trim()) {
-      setRegError('Full Name is required for citizen emergency registration');
+      setRegError('Full Name is required for registration');
       return;
     }
 
@@ -102,7 +92,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
 
       localStorage.setItem('aegisops_jwt', data.token);
       onLoginSuccess(data.user, data.token);
-      alert(`Welcome ${data.user.fullName}! Citizen profile registered and active.`);
+      alert(`Welcome ${data.user.fullName}! Your Citizen account has been registered.`);
       onClose();
     } catch (err: any) {
       setRegError(err.message || 'Registration failed. Please try again.');
@@ -111,35 +101,27 @@ export const AuthModal: React.FC<AuthModalProps> = ({
     }
   };
 
-  const handleSelectDemo = (acc: any) => {
-    localStorage.setItem('aegisops_jwt', acc.token);
+  const handleSignOut = () => {
+    localStorage.removeItem('aegisops_jwt');
     onLoginSuccess(
       {
-        username: acc.username,
-        fullName: acc.fullName,
-        role: acc.role,
-        zoneId: acc.zoneId,
-        phoneNumber: acc.phoneNumber
+        username: 'guest_citizen',
+        fullName: 'Public Citizen (Guest)',
+        role: 'CITIZEN',
+        zoneId: 'zone-ndma-in'
       },
-      acc.token
+      ''
     );
     onClose();
   };
 
-  const getRoleIcon = (role: UserRole) => {
-    switch (role) {
-      case 'NATIONAL_COMMANDER':
-        return <Globe size={15} color="#38bdf8" />;
-      case 'CONTROL_ROOM_OPERATOR':
-        return <Activity size={15} color="#fbbf24" />;
-      case 'RESCUE_RESPONDER':
-        return <Radio size={15} color="#f87171" />;
-      case 'HOSPITAL_ADMIN':
-        return <Building size={15} color="#34d399" />;
-      default:
-        return <Shield size={15} color="#a855f7" />;
-    }
+  const handleAdminPrefill = () => {
+    setIdentifier('fardeenakmal123@gmail.com');
+    setPassword('Akmal@1974');
+    setSignInError(null);
   };
+
+  const isGuest = !currentUser || currentUser.username === 'guest_citizen' || !localStorage.getItem('aegisops_jwt');
 
   return (
     <div
@@ -163,7 +145,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
         className="vercel-panel modal-content"
         style={{
           width: '100%',
-          maxWidth: 520,
+          maxWidth: 480,
           maxHeight: '94vh',
           display: 'flex',
           flexDirection: 'column',
@@ -172,7 +154,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
           overflow: 'hidden'
         }}
       >
-        {/* Header */}
+        {/* Modal Header */}
         <div
           style={{
             padding: '12px 16px',
@@ -200,10 +182,10 @@ export const AuthModal: React.FC<AuthModalProps> = ({
             </div>
             <div>
               <h3 style={{ fontSize: 13, fontWeight: 700, color: '#ffffff', margin: 0 }}>
-                AegisOps Authentication & RBAC
+                AegisOps Authentication
               </h3>
               <p style={{ fontSize: 10, color: '#737373', margin: 0 }}>
-                Role-Based Access Control & Citizen Identity Portal
+                Administrator & Citizen Secure Portal
               </p>
             </div>
           </div>
@@ -213,12 +195,12 @@ export const AuthModal: React.FC<AuthModalProps> = ({
           </button>
         </div>
 
-        {/* Current User Session Pill */}
-        {currentUser && (
+        {/* Current Active User Status */}
+        {!isGuest && currentUser && (
           <div
             style={{
               padding: '8px 14px',
-              background: 'rgba(56, 189, 248, 0.06)',
+              background: 'rgba(56, 189, 248, 0.08)',
               borderBottom: '1px solid var(--border-subtle)',
               display: 'flex',
               alignItems: 'center',
@@ -227,25 +209,14 @@ export const AuthModal: React.FC<AuthModalProps> = ({
             }}
           >
             <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-              <span style={{ color: '#737373' }}>Signed in as:</span>
+              <span style={{ color: '#737373' }}>Logged in as:</span>
               <span style={{ color: '#ffffff', fontWeight: 700 }}>{currentUser.fullName}</span>
-              <span className="badge badge-cyan" style={{ fontSize: 9, padding: '1px 5px' }}>
-                {currentUser.role}
+              <span className={`badge ${currentUser.role === 'NATIONAL_COMMANDER' ? 'badge-critical' : 'badge-cyan'}`} style={{ fontSize: 9, padding: '1px 6px' }}>
+                {currentUser.role === 'NATIONAL_COMMANDER' ? 'ADMIN' : 'CITIZEN'}
               </span>
             </div>
             <button
-              onClick={() => {
-                localStorage.removeItem('aegisops_jwt');
-                onLoginSuccess(
-                  {
-                    username: 'anonymous_citizen',
-                    fullName: 'Public Citizen',
-                    role: 'CITIZEN',
-                    zoneId: 'zone-ndma-in'
-                  },
-                  ''
-                );
-              }}
+              onClick={handleSignOut}
               className="btn btn-ghost"
               style={{ fontSize: 10, padding: '2px 6px', color: '#f87171' }}
               title="Sign Out"
@@ -260,149 +231,25 @@ export const AuthModal: React.FC<AuthModalProps> = ({
         <div style={{ padding: '8px 12px 0', background: '#0a0a0a' }}>
           <div className="segmented-control" style={{ width: '100%' }}>
             <button
-              onClick={() => setActiveTab('quick')}
-              className={`segmented-btn ${activeTab === 'quick' ? 'active' : ''}`}
-              style={{ fontSize: 11, padding: '6px 8px' }}
-            >
-              🔐 Quick Roles
-            </button>
-            <button
               onClick={() => setActiveTab('signin')}
               className={`segmented-btn ${activeTab === 'signin' ? 'active' : ''}`}
-              style={{ fontSize: 11, padding: '6px 8px' }}
+              style={{ fontSize: 11, padding: '7px 8px' }}
             >
-              🔑 Sign In
+              🔑 Sign In (लॉग इन)
             </button>
             <button
               onClick={() => setActiveTab('register')}
               className={`segmented-btn ${activeTab === 'register' ? 'active' : ''}`}
-              style={{ fontSize: 11, padding: '6px 8px' }}
+              style={{ fontSize: 11, padding: '7px 8px' }}
             >
-              📝 Register Citizen
+              📝 Citizen Registration (नागरिक पंजीकरण)
             </button>
           </div>
         </div>
 
-        {/* Tab Contents */}
-        <div style={{ flex: 1, overflowY: 'auto', padding: '12px 16px' }}>
-          {/* TAB 1: QUICK DEMO ROLES */}
-          {activeTab === 'quick' && (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-              <div style={{ fontSize: 11, color: '#a1a1a1', lineHeight: 1.4 }}>
-                Select an operational role below for 1-click simulation with verified credentials and cryptographic JWT tokens:
-              </div>
-
-              {loadingDemo ? (
-                <div style={{ textAlign: 'center', padding: 20, color: '#737373' }}>
-                  <Loader2 size={18} className="spin-anim" style={{ margin: '0 auto 6px' }} />
-                  <span>Loading RBAC profiles...</span>
-                </div>
-              ) : (
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-                  {demoAccounts.map((acc, idx) => (
-                    <div
-                      key={idx}
-                      onClick={() => handleSelectDemo(acc)}
-                      className="vercel-card"
-                      style={{
-                        padding: '10px 12px',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'space-between',
-                        cursor: 'pointer',
-                        borderColor: currentUser?.username === acc.username ? '#38bdf8' : 'var(--border-subtle)',
-                        background: currentUser?.username === acc.username ? 'rgba(56, 189, 248, 0.08)' : '#111111',
-                        transition: 'all 0.15s ease'
-                      }}
-                    >
-                      <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                        <div
-                          style={{
-                            width: 32,
-                            height: 32,
-                            borderRadius: 6,
-                            background: '#161616',
-                            border: '1px solid var(--border-subtle)',
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                            flexShrink: 0
-                          }}
-                        >
-                          {getRoleIcon(acc.role)}
-                        </div>
-                        <div>
-                          <div style={{ fontSize: 12, fontWeight: 700, color: '#ffffff' }}>
-                            {acc.fullName}
-                          </div>
-                          <div style={{ fontSize: 10, color: '#737373' }}>
-                            @{acc.username} &bull; Zone: {acc.zoneId}
-                          </div>
-                        </div>
-                      </div>
-
-                      <span className="badge badge-low" style={{ fontSize: 9 }}>
-                        {acc.role}
-                      </span>
-                    </div>
-                  ))}
-
-                  {/* Public Citizen Quick Role */}
-                  <div
-                    onClick={() =>
-                      handleSelectDemo({
-                        username: 'aarav_sharma',
-                        fullName: 'Aarav Sharma (Citizen)',
-                        role: 'CITIZEN',
-                        zoneId: 'zone-mh-mum',
-                        token: ''
-                      })
-                    }
-                    className="vercel-card"
-                    style={{
-                      padding: '10px 12px',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'space-between',
-                      cursor: 'pointer',
-                      background: '#111111'
-                    }}
-                  >
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                      <div
-                        style={{
-                          width: 32,
-                          height: 32,
-                          borderRadius: 6,
-                          background: '#161616',
-                          border: '1px solid var(--border-subtle)',
-                          display: 'flex',
-                          alignItems: 'center',
-                          justifyContent: 'center',
-                          flexShrink: 0
-                        }}
-                      >
-                        <User size={15} color="#34d399" />
-                      </div>
-                      <div>
-                        <div style={{ fontSize: 12, fontWeight: 700, color: '#ffffff' }}>
-                          Aarav Sharma (Citizen)
-                        </div>
-                        <div style={{ fontSize: 10, color: '#737373' }}>
-                          Verified Citizen &bull; Mumbai Resident
-                        </div>
-                      </div>
-                    </div>
-                    <span className="badge badge-success" style={{ fontSize: 9 }}>
-                      CITIZEN
-                    </span>
-                  </div>
-                </div>
-              )}
-            </div>
-          )}
-
-          {/* TAB 2: SIGN IN */}
+        {/* Tab Content */}
+        <div style={{ flex: 1, overflowY: 'auto', padding: '14px 16px' }}>
+          {/* TAB 1: SIGN IN */}
           {activeTab === 'signin' && (
             <form onSubmit={handleSignIn} style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
               {signInError && (
@@ -413,23 +260,27 @@ export const AuthModal: React.FC<AuthModalProps> = ({
                     border: '1px solid rgba(239, 68, 68, 0.3)',
                     borderRadius: 6,
                     fontSize: 11,
-                    color: '#fca5a5'
+                    color: '#fca5a5',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: 6
                   }}
                 >
-                  {signInError}
+                  <AlertTriangle size={13} color="#f87171" />
+                  <span>{signInError}</span>
                 </div>
               )}
 
               <div>
-                <label className="form-label" style={{ fontSize: 11 }}>Username or Email</label>
+                <label className="form-label" style={{ fontSize: 11 }}>Email or Username (ईमेल / उपयोगकर्ता नाम)</label>
                 <div style={{ position: 'relative' }}>
                   <User size={14} color="#737373" style={{ position: 'absolute', left: 10, top: 10 }} />
                   <input
                     type="text"
                     required
-                    placeholder="e.g. operator_mumbai or your email"
-                    value={username}
-                    onChange={(e) => setUsername(e.target.value)}
+                    placeholder="e.g. fardeenakmal123@gmail.com or citizen username"
+                    value={identifier}
+                    onChange={(e) => setIdentifier(e.target.value)}
                     className="form-input"
                     style={{ paddingLeft: 30, fontSize: 12 }}
                   />
@@ -437,18 +288,46 @@ export const AuthModal: React.FC<AuthModalProps> = ({
               </div>
 
               <div>
-                <label className="form-label" style={{ fontSize: 11 }}>Password</label>
+                <label className="form-label" style={{ fontSize: 11 }}>Password (पासवर्ड)</label>
                 <div style={{ position: 'relative' }}>
                   <Key size={14} color="#737373" style={{ position: 'absolute', left: 10, top: 10 }} />
                   <input
                     type="password"
-                    placeholder="••••••••"
+                    required
+                    placeholder="Enter password"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     className="form-input"
                     style={{ paddingLeft: 30, fontSize: 12 }}
                   />
                 </div>
+              </div>
+
+              {/* Admin Shortcut Helper */}
+              <div
+                style={{
+                  padding: '8px 10px',
+                  background: 'rgba(255, 255, 255, 0.03)',
+                  border: '1px solid var(--border-subtle)',
+                  borderRadius: 6,
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'space-between',
+                  fontSize: 11
+                }}
+              >
+                <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                  <Shield size={13} color="#38bdf8" />
+                  <span style={{ color: '#a1a1a1' }}>System Administrator:</span>
+                </div>
+                <button
+                  type="button"
+                  onClick={handleAdminPrefill}
+                  className="btn btn-ghost"
+                  style={{ fontSize: 10, padding: '2px 6px', color: '#38bdf8' }}
+                >
+                  Fill Admin Credentials
+                </button>
               </div>
 
               <button
@@ -463,7 +342,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
                   alignItems: 'center',
                   justifyContent: 'center',
                   gap: 6,
-                  marginTop: 4
+                  marginTop: 2
                 }}
               >
                 {isSigningIn ? (
@@ -479,20 +358,20 @@ export const AuthModal: React.FC<AuthModalProps> = ({
                 )}
               </button>
 
-              <div style={{ textAlign: 'center', fontSize: 11, color: '#737373', marginTop: 4 }}>
-                Don't have an account?{' '}
+              <div style={{ textAlign: 'center', fontSize: 11, color: '#737373', marginTop: 2 }}>
+                Public citizen?{' '}
                 <button
                   type="button"
                   onClick={() => setActiveTab('register')}
                   style={{ background: 'none', border: 'none', color: '#38bdf8', cursor: 'pointer', padding: 0, textDecoration: 'underline' }}
                 >
-                  Register as Citizen
+                  Register here for citizen services
                 </button>
               </div>
             </form>
           )}
 
-          {/* TAB 3: CITIZEN REGISTRATION */}
+          {/* TAB 2: CITIZEN REGISTRATION */}
           {activeTab === 'register' && (
             <form onSubmit={handleRegister} style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
               {regError && (
@@ -503,10 +382,14 @@ export const AuthModal: React.FC<AuthModalProps> = ({
                     border: '1px solid rgba(239, 68, 68, 0.3)',
                     borderRadius: 6,
                     fontSize: 11,
-                    color: '#fca5a5'
+                    color: '#fca5a5',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: 6
                   }}
                 >
-                  {regError}
+                  <AlertTriangle size={13} color="#f87171" />
+                  <span>{regError}</span>
                 </div>
               )}
 
@@ -517,7 +400,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
                   <input
                     type="text"
                     required
-                    placeholder="e.g. Priya Sharma"
+                    placeholder="e.g. Rahul Sharma"
                     value={regFullName}
                     onChange={(e) => setRegFullName(e.target.value)}
                     className="form-input"
@@ -528,7 +411,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
 
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
                 <div>
-                  <label className="form-label" style={{ fontSize: 11 }}>Mobile Phone</label>
+                  <label className="form-label" style={{ fontSize: 11 }}>Mobile Phone (फोन नंबर)</label>
                   <div style={{ position: 'relative' }}>
                     <Phone size={13} color="#737373" style={{ position: 'absolute', left: 10, top: 10 }} />
                     <input
@@ -543,7 +426,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
                 </div>
 
                 <div>
-                  <label className="form-label" style={{ fontSize: 11 }}>City / Region</label>
+                  <label className="form-label" style={{ fontSize: 11 }}>City / State</label>
                   <select
                     value={regZoneId}
                     onChange={(e) => setRegZoneId(e.target.value)}
@@ -562,7 +445,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
               </div>
 
               <div>
-                <label className="form-label" style={{ fontSize: 11 }}>Email Address (Optional)</label>
+                <label className="form-label" style={{ fontSize: 11 }}>Email Address (ईमेल)</label>
                 <div style={{ position: 'relative' }}>
                   <Mail size={13} color="#737373" style={{ position: 'absolute', left: 10, top: 10 }} />
                   <input
@@ -582,7 +465,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
                   <Key size={13} color="#737373" style={{ position: 'absolute', left: 10, top: 10 }} />
                   <input
                     type="password"
-                    placeholder="Create a password"
+                    placeholder="Create a secure password"
                     value={regPassword}
                     onChange={(e) => setRegPassword(e.target.value)}
                     className="form-input"
@@ -603,7 +486,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
                   alignItems: 'center',
                   justifyContent: 'center',
                   gap: 6,
-                  marginTop: 4
+                  marginTop: 2
                 }}
               >
                 {isRegistering ? (
