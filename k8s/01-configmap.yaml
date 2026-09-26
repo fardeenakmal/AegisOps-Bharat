@@ -1,0 +1,16 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: aegisops-config
+  namespace: aegisops
+data:
+  SPRING_PROFILES_ACTIVE: "mysql"
+  SERVER_PORT: "4000"
+  SPRING_FLYWAY_ENABLED: "true"
+  DEFAULT_REGION_CODE: "INDIA"
+  DEFAULT_CENTER_LAT: "22.0"
+  DEFAULT_CENTER_LON: "78.9629"
+  DEFAULT_ZOOM: "5"
+  MYSQL_HOST: "mysql"
+  MYSQL_PORT: "3306"
+  MYSQL_DATABASE: "emergency_db"

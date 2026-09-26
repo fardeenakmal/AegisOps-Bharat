@@ -211,23 +211,42 @@ All pre-seeded demo accounts use the standard password: `Password@123`
 
 ### Step 1: Clone the Repository
 ```bash
-git clone https://github.com/fardeenakmal/AegisOps.git
-cd AegisOps
+git clone https://github.com/fardeenakmal/AegisOps-Bharat.git
+cd AegisOps-Bharat
 ```
 
 ---
 
-### Step 2: Start Backend (Spring Boot — Port 4000)
+### Step 2: 1-Command Production Deployment (Docker Compose)
+AegisOps Bharat includes full containerization for enterprise deployment with Nginx, Spring Boot 3.3.4, MySQL 8.4 LTS, and Redis 7:
+
+```bash
+# Automated deployment script (checks prerequisites, builds images, boots stack)
+./scripts/deploy.sh
+```
+Or directly via Docker Compose v2:
+```bash
+docker compose up -d --build
+```
+* Access the Unified Tactical HUD at **http://localhost** (Port 80)
+* REST & WebSocket APIs at **http://localhost:4000/api**
+* Actuator Health Probe at **http://localhost:4000/actuator/health**
+
+For comprehensive Kubernetes (EKS/GKE), Render blueprints, and cloud deployment guides, see the [Production Deployment Manual](DEPLOYMENT.md).
+
+---
+
+### Step 3: Local Development Mode (Without Docker)
+
+#### Start Backend (Spring Boot — Port 4000):
 ```bash
 cd backend
 mvn spring-boot:run
 ```
-*The Spring Boot backend will start on **http://localhost:4000** and initialize the persistent database at `./data/emergency_db`.*
+*The Spring Boot backend will start on **http://localhost:4000** and initialize the persistent database.*
 
----
-
-### Step 3: Start Frontend (React + Vite — Port 3000)
-In a new terminal window:
+#### Start Frontend (React + Vite — Port 3000):
+In a separate terminal:
 ```bash
 cd frontend
 npm install
@@ -237,19 +256,10 @@ npm run dev
 
 ---
 
-### Alternative: Run with Single Root Command
+### Alternative: Concurrent Root Command
 From the project root directory:
 ```bash
-# Starts both Spring Boot backend and Vite frontend concurrently
 npm run dev
-```
-
----
-
-### Alternative: Docker Compose (MySQL + Redis + Spring Boot)
-```bash
-docker compose up --build -d
-npm run dev:frontend
 ```
 
 ---

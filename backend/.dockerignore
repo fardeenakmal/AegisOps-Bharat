@@ -1,0 +1,12 @@
+target/
+*.class
+*.jar
+*.war
+.git
+.gitignore
+.idea
+.vscode
+*.log
+data/
+*.mv.db
+*.trace.db

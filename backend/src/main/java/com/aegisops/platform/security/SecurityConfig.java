@@ -49,7 +49,7 @@ public class SecurityConfig {
                 .authorizeHttpRequests(auth -> auth
                         // Public authentication & healthcheck endpoints
                         .requestMatchers("/api/auth/**").permitAll()
-                        .requestMatchers("/health", "/health/**", "/metrics", "/metrics/**").permitAll()
+                        .requestMatchers("/actuator/**", "/health", "/health/**", "/metrics", "/metrics/**").permitAll()
                         .requestMatchers("/api/system/health").permitAll()
                         // Public citizen reporting intake
                         .requestMatchers(HttpMethod.POST, "/api/requests", "/api/reports").permitAll()

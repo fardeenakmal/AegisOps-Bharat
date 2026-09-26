@@ -1,0 +1,7 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: aegisops
+  labels:
+    app.kubernetes.io/name: aegisops
+    app.kubernetes.io/part-of: civil-defense-platform

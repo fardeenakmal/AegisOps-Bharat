@@ -43,8 +43,18 @@ public class RiskZoneController {
             Double surge = body.get("riverGaugeSurgePercent") instanceof Number n ? n.doubleValue() : null;
             Double lat = body.get("latitude") instanceof Number n ? n.doubleValue() : null;
             Double lon = body.get("longitude") instanceof Number n ? n.doubleValue() : null;
+            Double eqMag = body.get("earthquakeMagnitude") instanceof Number n ? n.doubleValue() : null;
+            Double depth = body.get("hypocenterDepthKm") instanceof Number n ? n.doubleValue() : null;
+            String scenarioName = (String) body.get("scenarioName");
+            String customSummary = (String) body.get("customSummary");
+            Boolean injectIncidents = body.get("injectIncidents") instanceof Boolean b ? b : false;
+            Integer casualties = body.get("estimatedCasualties") instanceof Number n ? n.intValue() : null;
+            Integer trapped = body.get("estimatedTrapped") instanceof Number n ? n.intValue() : null;
 
-            SimulationInput input = new SimulationInput(zoneId, riskType, wind, precip, surge, lat, lon);
+            SimulationInput input = new SimulationInput(
+                    zoneId, riskType, wind, precip, surge, lat, lon,
+                    eqMag, depth, scenarioName, customSummary, injectIncidents, casualties, trapped
+            );
             AlertEntity alert = zoneService.simulateHazard(input);
 
             return ResponseEntity.status(201).body(alert);

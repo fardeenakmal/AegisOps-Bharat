@@ -1,52 +1,87 @@
 version: '3.8'
 
 services:
+  # ----------------------------------------------------------------------------
+  # Relational Database: MySQL 8.4 LTS for Incident & Spatial Entities
+  # ----------------------------------------------------------------------------
   mysql:
     image: mysql:8.4-lts
-    container_name: emergency-mysql
+    container_name: aegisops-mysql
+    command: >
+      --character-set-server=utf8mb4
+      --collation-server=utf8mb4_unicode_ci
     environment:
-      MYSQL_DATABASE: emergency_db
-      MYSQL_USER: emergency_user
-      MYSQL_PASSWORD: emergency_secure_pass_2026
-      MYSQL_ROOT_PASSWORD: root_secure_pass_2026
+      MYSQL_DATABASE: ${MYSQL_DATABASE:-emergency_db}
+      MYSQL_USER: ${MYSQL_USER:-emergency_user}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD:-emergency_secure_pass_2026}
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:-root_secure_pass_2026}
     ports:
-      - "3306:3306"
+      - "${MYSQL_PORT:-3306}:3306"
     volumes:
       - mysqldata:/var/lib/mysql
     restart: unless-stopped
     healthcheck:
-      test: ["CMD-SHELL", "mysqladmin ping -h localhost -u emergency_user -pemergency_secure_pass_2026 || exit 1"]
+      test: ["CMD-SHELL", "mysqladmin ping -h localhost -u root -p$${MYSQL_ROOT_PASSWORD:-root_secure_pass_2026} || exit 1"]
       interval: 10s
       timeout: 5s
       retries: 5
+      start_period: 20s
 
+  # ----------------------------------------------------------------------------
+  # Cache & Event Broker: Redis 7
+  # ----------------------------------------------------------------------------
   redis:
     image: redis:7-alpine
-    container_name: emergency-redis
+    container_name: aegisops-redis
     ports:
-      - "6379:6379"
+      - "${REDIS_PORT:-6379}:6379"
     restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 3s
+      retries: 3
 
+  # ----------------------------------------------------------------------------
+  # Backend Service: Spring Boot 3.3.4 (Java 21 Enterprise Platform)
+  # ----------------------------------------------------------------------------
   backend:
     build:
       context: ./backend
       dockerfile: Dockerfile
-    container_name: emergency-backend
+    container_name: aegisops-backend
     environment:
       SERVER_PORT: 4000
-      SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/emergency_db?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC
-      SPRING_DATASOURCE_USERNAME: emergency_user
-      SPRING_DATASOURCE_PASSWORD: emergency_secure_pass_2026
+      SPRING_PROFILES_ACTIVE: mysql
+      SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/${MYSQL_DATABASE:-emergency_db}?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC&characterEncoding=UTF-8
+      SPRING_DATASOURCE_USERNAME: ${MYSQL_USER:-emergency_user}
+      SPRING_DATASOURCE_PASSWORD: ${MYSQL_PASSWORD:-emergency_secure_pass_2026}
       SPRING_FLYWAY_ENABLED: "true"
-      JWT_SECRET: aegisops-super-secure-production-jwt-key-2026-spring-edition-minimum-32-chars
+      JWT_SECRET: ${JWT_SECRET:-aegisops-super-secure-production-jwt-key-2026-spring-edition-minimum-32-chars}
     ports:
-      - "4000:4000"
+      - "${BACKEND_PORT:-4000}:4000"
     depends_on:
       mysql:
         condition: service_healthy
       redis:
-        condition: service_started
+        condition: service_healthy
+    restart: unless-stopped
+
+  # ----------------------------------------------------------------------------
+  # Frontend & Reverse Proxy: React + Vite + Nginx Alpine
+  # ----------------------------------------------------------------------------
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: aegisops-frontend
+    ports:
+      - "${PORT:-80}:80"
+    depends_on:
+      backend:
+        condition: service_healthy
     restart: unless-stopped
 
 volumes:
   mysqldata:
+    driver: local

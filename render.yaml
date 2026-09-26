@@ -1,0 +1,53 @@
+services:
+  # ----------------------------------------------------------------------------
+  # AegisOps Spring Boot Enterprise Backend (Java 21, Docker Web Service)
+  # ----------------------------------------------------------------------------
+  - type: web
+    name: aegisops-backend
+    runtime: docker
+    dockerfilePath: backend/Dockerfile
+    dockerContext: backend
+    plan: standard
+    region: oregon
+    healthCheckPath: /actuator/health
+    envVars:
+      - key: SERVER_PORT
+        value: 4000
+      - key: SPRING_PROFILES_ACTIVE
+        value: mysql
+      - key: SPRING_FLYWAY_ENABLED
+        value: "true"
+      - key: SPRING_DATASOURCE_URL
+        fromDatabase:
+          name: aegisops-mysql
+          property: connectionString
+      - key: JWT_SECRET
+        generateValue: true
+
+  # ----------------------------------------------------------------------------
+  # AegisOps Tactical Command HUD (React 18, Vite 5, Nginx Alpine)
+  # ----------------------------------------------------------------------------
+  - type: web
+    name: aegisops-frontend
+    runtime: docker
+    dockerfilePath: frontend/Dockerfile
+    dockerContext: frontend
+    plan: starter
+    region: oregon
+    healthCheckPath: /nginx-health
+    envVars:
+      - key: VITE_API_URL
+        fromService:
+          type: web
+          name: aegisops-backend
+          property: host
+
+databases:
+  # ----------------------------------------------------------------------------
+  # Relational Database: Managed MySQL
+  # ----------------------------------------------------------------------------
+  - name: aegisops-mysql
+    databaseName: emergency_db
+    user: emergency_user
+    plan: starter
+    region: oregon
