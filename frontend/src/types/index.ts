@@ -182,6 +182,11 @@ export interface Dispatch {
   onSceneAt?: string;
   completedAt?: string;
   responderNotes?: string;
+  routeGeometry?: string;
+  turnByTurnInstructions?: string[];
+  roadDistanceMeters?: number;
+  isReroutedForFlood?: boolean;
+  hazardWarnings?: string[];
 }
 
 export interface Hospital {
@@ -247,4 +252,57 @@ export interface AuditLog {
   modelVersion?: string;
   confidence?: number;
   timestamp: string;
+}
+
+export interface NaturalEvent {
+  id: string;
+  title: string;
+  category: string;
+  categoryTitle: string;
+  latitude: number;
+  longitude: number;
+  date: string;
+  link: string;
+  magnitude?: number | null;
+  magnitudeUnit?: string | null;
+}
+
+export interface GdacsAlert {
+  id: string;
+  title: string;
+  description: string;
+  link: string;
+  pubDate: string;
+  eventType: string;
+  alertLevel: 'Red' | 'Orange' | 'Green' | string;
+  latitude: number;
+  longitude: number;
+  capUrl?: string;
+}
+
+export interface SeismicEvent {
+  id: string;
+  title: string;
+  place: string;
+  magnitude: number;
+  depthKm: number;
+  latitude: number;
+  longitude: number;
+  eventTime: string;
+  tsunamiFlag: boolean;
+}
+
+export interface NationalRollup {
+  nationalRiskIndex: number;
+  totalActiveIncidents: number;
+  criticalZonesCount: number;
+  deployedFleetCount: number;
+  states: {
+    stateId: string;
+    stateName: string;
+    activeIncidents: number;
+    severity: string;
+    riskIndex: number;
+  }[];
+  crossJurisdictionRequests: any[];
 }

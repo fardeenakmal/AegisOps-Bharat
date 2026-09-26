@@ -1,0 +1,19 @@
+{
+  "short_name": "AegisOps Bharat",
+  "name": "AegisOps Bharat - NDMA Emergency Disaster Operations",
+  "description": "National Incident Coordination, Multi-Hazard Telemetry, and Vernacular Field Response Platform",
+  "icons": [
+    {
+      "src": "/favicon.ico",
+      "sizes": "64x64 32x32 24x24 16x16",
+      "type": "image/x-icon"
+    }
+  ],
+  "start_url": "/",
+  "display": "standalone",
+  "theme_color": "#0f172a",
+  "background_color": "#020617",
+  "orientation": "portrait-primary",
+  "categories": ["emergency", "government", "utilities"]
+}
+

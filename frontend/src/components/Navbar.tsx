@@ -1,11 +1,9 @@
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import {
   Shield,
   Activity,
-  AlertTriangle,
   Radio,
   RefreshCw,
-  Sparkles,
   Volume2,
   VolumeX,
   FileText,
@@ -16,9 +14,14 @@ import {
   Sliders,
   Layers,
   Menu,
-  X
+  X,
+  ChevronDown,
+  Sun,
+  Moon,
+  Bell
 } from 'lucide-react';
 import { UserRole } from '../types';
+import { OfflineIndicator } from './OfflineIndicator';
 
 interface NavbarProps {
   activeRole: UserRole;
@@ -37,10 +40,17 @@ interface NavbarProps {
   onOpenBroadcastModal: () => void;
   onOpenMetricsModal: () => void;
   onOpenAuthModal: () => void;
-  activeView: 'dashboard' | 'responder' | 'hospital' | 'command' | 'public-report';
-  setActiveView: (view: 'dashboard' | 'responder' | 'hospital' | 'command' | 'public-report') => void;
+  activeView: 'dashboard' | 'responder' | 'hospital' | 'command' | string;
+  setActiveView: (view: 'dashboard' | 'responder' | 'hospital' | 'command') => void;
   isSyncingFeeds?: boolean;
   onSyncExternalFeeds?: () => void;
+  theme?: 'dark' | 'light';
+  onToggleTheme?: () => void;
+  operationalMode?: 'LIVE' | 'SIMULATION';
+  setOperationalMode?: (mode: 'LIVE' | 'SIMULATION') => void;
+  onOpenAlertCenter?: () => void;
+  unreadAlertCount?: number;
+  onOpenFeedsModal?: () => void;
 }
 
 export const Navbar: React.FC<NavbarProps> = ({
@@ -60,100 +70,136 @@ export const Navbar: React.FC<NavbarProps> = ({
   onOpenBroadcastModal,
   onOpenMetricsModal,
   onOpenAuthModal,
+  onOpenFeedsModal,
   activeView,
   setActiveView,
   isSyncingFeeds = false,
-  onSyncExternalFeeds
+  onSyncExternalFeeds,
+  theme = 'dark',
+  onToggleTheme,
+  operationalMode = 'LIVE',
+  setOperationalMode,
+  onOpenAlertCenter,
+  unreadAlertCount = 0
 }) => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [toolsMenuOpen, setToolsMenuOpen] = useState(false);
+  const toolsMenuRef = useRef<HTMLDivElement | null>(null);
 
-  const handleSelectView = (view: 'dashboard' | 'responder' | 'hospital' | 'command' | 'public-report') => {
+  // Close dropdown on outside click
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (toolsMenuRef.current && !toolsMenuRef.current.contains(e.target as Node)) {
+        setToolsMenuOpen(false);
+      }
+    };
+    if (toolsMenuOpen) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [toolsMenuOpen]);
+
+  const handleSelectView = (view: 'dashboard' | 'responder' | 'hospital' | 'command') => {
     setActiveView(view);
     setMobileMenuOpen(false);
   };
 
   return (
     <header className="vercel-nav">
-      {/* Primary Top Bar */}
+      {/* Sleek Single-Bar Navigation with Tiranga Top Stripe */}
       <div
         style={{
-          minHeight: 48,
-          padding: '6px 14px',
+          minHeight: 52,
+          padding: '0 16px',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'space-between',
-          borderBottom: '1px solid var(--border-subtle)',
-          flexWrap: 'nowrap'
+          gap: 12
         }}
       >
-        {/* Left: Brand & Live Status */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+        {/* Left: Brand & Mode Switcher */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: 12, flexShrink: 0 }}>
+          {/* Brand Logo with Ashoka Navy & Saffron Identity */}
           <div
-            style={{ display: 'flex', alignItems: 'center', gap: 7, cursor: 'pointer' }}
+            style={{ display: 'flex', alignItems: 'center', gap: 8, cursor: 'pointer' }}
             onClick={() => handleSelectView('dashboard')}
           >
             <div
               style={{
                 width: 28,
                 height: 28,
-                borderRadius: 6,
-                backgroundColor: '#ef4444',
+                borderRadius: 7,
+                backgroundColor: '#1e3a8a',
+                border: '1px solid #3b82f6',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
-                boxShadow: '0 0 10px rgba(239, 68, 68, 0.4)',
+                boxShadow: '0 0 10px rgba(59, 130, 246, 0.4)',
                 flexShrink: 0
               }}
             >
-              <Shield size={16} color="#ffffff" />
+              <Shield size={15} color="#ffffff" />
             </div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
-              <span style={{ fontSize: 13, fontWeight: 700, letterSpacing: '-0.02em', color: '#ffffff' }}>
+            <div style={{ display: 'flex', alignItems: 'baseline', gap: 5 }}>
+              <span style={{ fontSize: 13, fontWeight: 800, letterSpacing: '-0.02em', color: 'var(--text-primary)' }}>
                 AEGISOPS
               </span>
-              <span className="mobile-hide" style={{ fontSize: 10, color: '#737373', borderLeft: '1px solid #333', paddingLeft: 5 }}>
-                NDMA 112
+              <span
+                style={{
+                  fontSize: 9.5,
+                  fontWeight: 800,
+                  color: 'var(--tiranga-saffron)',
+                  letterSpacing: '0.08em',
+                  fontFamily: 'var(--font-mono)'
+                }}
+              >
+                BHARAT
               </span>
             </div>
           </div>
 
-          {/* Live Status Pill */}
-          <div
-            className="badge"
-            style={{
-              background: wsConnected ? 'rgba(16, 185, 129, 0.1)' : 'rgba(245, 158, 11, 0.1)',
-              color: wsConnected ? '#6ee7b7' : '#fde68a',
-              borderColor: wsConnected ? 'rgba(16, 185, 129, 0.3)' : 'rgba(245, 158, 11, 0.3)',
-              fontSize: 10,
-              padding: '1px 6px'
-            }}
-          >
-            <span
-              className="badge-dot"
-              style={{
-                background: wsConnected ? '#10b981' : '#f59e0b',
-                boxShadow: wsConnected ? '0 0 6px rgba(16, 185, 129, 0.8)' : undefined
-              }}
-            />
-            <span className="mobile-hide">{wsConnected ? 'LIVE FEED' : 'RECONNECTING'}</span>
-          </div>
+          {/* Mode Switcher: Live Ops vs Simulation Drill */}
+          {setOperationalMode && (
+            <div className="mode-switcher mobile-hide">
+              <button
+                onClick={() => setOperationalMode('LIVE')}
+                className={`mode-btn ${operationalMode === 'LIVE' ? 'active-live' : ''}`}
+                title="Switch to Real-Time Operational Telemetry Feed"
+              >
+                <span className="pulse-dot green" />
+                <span>LIVE OPS</span>
+              </button>
+              <button
+                onClick={() => setOperationalMode('SIMULATION')}
+                className={`mode-btn ${operationalMode === 'SIMULATION' ? 'active-sim' : ''}`}
+                title="Switch to Disaster Management Training & Simulation Drill"
+              >
+                <span className="pulse-dot saffron" />
+                <span>SIMULATION DRILL</span>
+              </button>
+            </div>
+          )}
+
+          {/* Offline-First PWA Status Indicator */}
+          <OfflineIndicator />
 
           {criticalCount > 0 && (
-            <div className="badge badge-critical" style={{ fontSize: 10, padding: '1px 6px' }}>
+            <div className="badge badge-critical" style={{ fontSize: 10, padding: '2px 7px' }}>
               <span className="badge-dot" />
-              <span>{criticalCount}</span>
+              <span className="num-tabular" style={{ fontWeight: 700 }}>{criticalCount}</span>
               <span className="mobile-hide">CRITICAL</span>
             </div>
           )}
         </div>
 
-        {/* Center: Desktop Navigation Links (Hidden on small mobile) */}
-        <div className="mobile-hide" style={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+        {/* Center: Desktop Navigation Tabs with Tiranga Accents */}
+        <div className="mobile-hide tab-underline-group">
           {[
             { id: 'dashboard', label: 'War Room', icon: <Activity size={13} /> },
-            { id: 'public-report', label: 'Public 112 Portal', icon: <AlertTriangle size={13} color="#f87171" /> },
+            { id: 'hospital', label: 'Trauma Beds', icon: <Layers size={13} /> },
             { id: 'responder', label: 'Fleet Units', icon: <Radio size={13} /> },
-            { id: 'hospital', label: 'Trauma Centers', icon: <Layers size={13} /> },
             { id: 'command', label: 'National HQ', icon: <Globe size={13} /> }
           ].map((tab) => {
             const isActive = activeView === tab.id;
@@ -161,21 +207,8 @@ export const Navbar: React.FC<NavbarProps> = ({
               <button
                 key={tab.id}
                 onClick={() => handleSelectView(tab.id as any)}
-                style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: 5,
-                  padding: '5px 10px',
-                  fontSize: 12,
-                  fontWeight: isActive ? 600 : 500,
-                  color: isActive ? '#ffffff' : '#a1a1a1',
-                  background: isActive ? '#1a1a1a' : 'transparent',
-                  border: '1px solid',
-                  borderColor: isActive ? 'var(--border-medium)' : 'transparent',
-                  borderRadius: 6,
-                  cursor: 'pointer',
-                  transition: 'all 0.15s ease'
-                }}
+                className={`tab-underline-btn ${isActive ? 'active' : ''}`}
+                style={{ padding: '15px 12px' }}
               >
                 {tab.icon}
                 <span>{tab.label}</span>
@@ -184,123 +217,439 @@ export const Navbar: React.FC<NavbarProps> = ({
           })}
         </div>
 
-        {/* Right: Actions, Citizen Report & Mobile Toggle */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-          {/* Quick 112 Citizen Report Button */}
+        {/* Right: Live Feeds + System Health + Sector Picker + Theme Toggle + Report + Tools */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: 7, flexShrink: 0 }}>
+          {/* Live Feeds Button */}
+          {onOpenFeedsModal && (
+            <button
+              onClick={onOpenFeedsModal}
+              className="btn btn-secondary mobile-hide"
+              style={{ fontSize: 11, padding: '4px 8px', height: 28, display: 'flex', alignItems: 'center', gap: 5 }}
+              title="Inspect real-time telemetry stream from NASA EONET, USGS, GDACS, and IMD"
+            >
+              <Radio size={12} color="#38bdf8" />
+              <span style={{ fontWeight: 600 }}>Live Feeds</span>
+            </button>
+          )}
+
+          {/* Visible System Health Pill Button */}
+          <button
+            onClick={onOpenMetricsModal}
+            className="btn btn-secondary mobile-hide"
+            style={{ fontSize: 11, padding: '4px 8px', height: 28, display: 'flex', alignItems: 'center', gap: 5 }}
+            title="Inspect real-time health and latency across all 9 open public integration APIs"
+          >
+            <span className="pulse-dot green" />
+            <span style={{ fontWeight: 600 }}>APIs (9/9)</span>
+          </button>
+
+          {/* Sector Selector (Strictly Indian Territories) */}
+          <div className="mobile-hide" style={{ display: 'flex', alignItems: 'center' }}>
+            <select
+              value={activeZone}
+              onChange={(e) => setActiveZone(e.target.value)}
+              className="form-select"
+              style={{
+                padding: '3px 8px',
+                fontSize: 11,
+                fontWeight: 500,
+                width: 'auto',
+                maxWidth: 155,
+                height: 28,
+                background: 'var(--bg-card)',
+                borderColor: 'var(--border-default)',
+                color: 'var(--text-primary)'
+              }}
+              title="Filter operational sector in India"
+            >
+              <option value="zone-ndma-in">All India (National Grid)</option>
+              <option value="zone-mh-mum">Mumbai Metro (BMC)</option>
+              <option value="zone-dl-ncr">Delhi NCR (DDMA)</option>
+              <option value="zone-ka-blr">Bengaluru Urban (BBMP)</option>
+              <option value="zone-tn-chn">Chennai Metro (GCC)</option>
+              <option value="zone-od-bbs">Odisha Coastal (OSDMA)</option>
+              <option value="zone-wb-kol">Kolkata Emergency (KMC)</option>
+            </select>
+          </div>
+
+          {/* Light / Dark Mode Toggle Button */}
+          {onToggleTheme && (
+            <button
+              onClick={onToggleTheme}
+              className="btn btn-secondary"
+              style={{ padding: 5, height: 28, width: 28 }}
+              title={theme === 'dark' ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
+              aria-label="Toggle theme mode"
+            >
+              {theme === 'dark' ? (
+                <Sun size={14} color="#FF9933" />
+              ) : (
+                <Moon size={14} color="#1d4ed8" />
+              )}
+            </button>
+          )}
+
+          {/* Alert Center Trigger */}
+          {onOpenAlertCenter && (
+            <button
+              onClick={onOpenAlertCenter}
+              className="btn btn-secondary"
+              style={{
+                fontSize: 11,
+                padding: '4px 8px',
+                height: 28,
+                display: 'flex',
+                alignItems: 'center',
+                gap: 5,
+                position: 'relative'
+              }}
+              title="Open Real-Time Alert Center"
+              aria-label="Open Alert Center"
+            >
+              <Bell size={12} color="#FF9933" />
+              <span className="mobile-hide">Alerts</span>
+              {unreadAlertCount > 0 && (
+                <span
+                  style={{
+                    background: '#f85149',
+                    color: '#fff',
+                    fontSize: 9,
+                    fontWeight: 700,
+                    padding: '1px 5px',
+                    borderRadius: 8
+                  }}
+                >
+                  {unreadAlertCount}
+                </span>
+              )}
+            </button>
+          )}
+
+          {/* Unified Primary Action: + Report Incident */}
           <button
             onClick={onOpenReportModal}
-            className="btn btn-danger"
-            style={{ fontSize: 11, padding: '5px 10px', fontWeight: 600 }}
+            className="btn btn-saffron"
+            style={{ fontSize: 11, padding: '4px 10px', fontWeight: 600, height: 28, display: 'flex', alignItems: 'center', gap: 5 }}
+            title="Submit emergency incident report with Bhashini Indic voice AI"
           >
-            <Send size={12} />
-            <span>112 Report</span>
+            <Send size={11} />
+            <span>+ Report</span>
           </button>
 
-          {/* Audio Chime Toggle */}
-          <button
-            onClick={() => setAudioMuted(!audioMuted)}
-            className="btn btn-ghost"
-            title={audioMuted ? 'Unmute Audio' : 'Mute Audio'}
-            style={{ padding: 6 }}
-          >
-            {audioMuted ? <VolumeX size={15} color="#737373" /> : <Volume2 size={15} color="#38bdf8" />}
-          </button>
+          {/* Tools Menu Dropdown */}
+          <div style={{ position: 'relative' }} ref={toolsMenuRef}>
+            <button
+              onClick={() => setToolsMenuOpen(!toolsMenuOpen)}
+              className="btn btn-secondary mobile-hide"
+              style={{ fontSize: 11, padding: '4px 9px', height: 28, display: 'flex', alignItems: 'center', gap: 5 }}
+              title="Operational Tools & Administration"
+            >
+              <Sliders size={12} color="#38bdf8" />
+              <span>Tools</span>
+              <ChevronDown size={11} color="var(--text-muted)" />
+            </button>
 
-          {/* User Profile / Auth Pill (Desktop) */}
-          <button
-            onClick={onOpenAuthModal}
-            className="btn btn-secondary mobile-hide"
-            style={{
-              padding: '4px 9px',
-              fontSize: 11,
-              display: 'flex',
-              alignItems: 'center',
-              gap: 5,
-              borderColor: currentUser.role === 'NATIONAL_COMMANDER' ? 'rgba(56, 189, 248, 0.4)' : 'var(--border-subtle)'
-            }}
-          >
-            <div
-              style={{
-                width: 6,
-                height: 6,
-                borderRadius: '50%',
-                background: currentUser.role === 'NATIONAL_COMMANDER' ? '#ef4444' : '#38bdf8'
-              }}
-            />
-            <span>
-              {currentUser.username === 'guest_citizen'
-                ? 'Sign In / Register'
-                : currentUser.fullName + (currentUser.role === 'NATIONAL_COMMANDER' ? ' (Admin)' : '')}
-            </span>
-          </button>
+            {toolsMenuOpen && (
+              <div
+                className="vercel-card"
+                style={{
+                  position: 'absolute',
+                  top: '100%',
+                  right: 0,
+                  marginTop: 6,
+                  width: 230,
+                  background: 'var(--bg-surface)',
+                  border: '1px solid var(--border-medium)',
+                  borderRadius: 8,
+                  boxShadow: '0 12px 32px rgba(0, 0, 0, 0.4)',
+                  padding: 4,
+                  zIndex: 1100,
+                  display: 'flex',
+                  flexDirection: 'column',
+                  gap: 2
+                }}
+              >
+                {/* Live Feeds stream modal */}
+                {onOpenFeedsModal && (
+                  <button
+                    onClick={() => {
+                      onOpenFeedsModal();
+                      setToolsMenuOpen(false);
+                    }}
+                    className="btn btn-ghost"
+                    style={{ justifyContent: 'flex-start', fontSize: 11, padding: '6px 10px', width: '100%' }}
+                  >
+                    <Radio size={12} color="#38bdf8" />
+                    <span>Live Disaster Feeds (NASA, USGS)</span>
+                  </button>
+                )}
 
-          {/* Mobile Menu Hamburger Toggle */}
+                {/* System API Health probe */}
+                <button
+                  onClick={() => {
+                    onOpenMetricsModal();
+                    setToolsMenuOpen(false);
+                  }}
+                  className="btn btn-ghost"
+                  style={{ justifyContent: 'flex-start', fontSize: 11, padding: '6px 10px', width: '100%' }}
+                >
+                  <Activity size={12} color="#16a34a" />
+                  <span>System Health (9 APIs)</span>
+                </button>
+
+                {/* Sync Feeds */}
+                {onSyncExternalFeeds && (
+                  <button
+                    onClick={() => {
+                      onSyncExternalFeeds();
+                      setToolsMenuOpen(false);
+                    }}
+                    disabled={isSyncingFeeds}
+                    className="btn btn-ghost"
+                    style={{ justifyContent: 'flex-start', fontSize: 11, padding: '6px 10px', width: '100%' }}
+                  >
+                    <RefreshCw size={12} className={isSyncingFeeds ? 'spin-anim' : ''} color="#38bdf8" />
+                    <span>{isSyncingFeeds ? 'Syncing Feeds...' : 'Sync Disaster Feeds'}</span>
+                  </button>
+                )}
+
+                {/* Simulation */}
+                <button
+                  onClick={() => {
+                    onOpenSimulationModal();
+                    setToolsMenuOpen(false);
+                  }}
+                  className="btn btn-ghost"
+                  style={{ justifyContent: 'flex-start', fontSize: 11, padding: '6px 10px', width: '100%' }}
+                >
+                  <Sliders size={12} color="#FF9933" />
+                  <span>AI Disaster Simulation</span>
+                </button>
+
+                {/* Broadcast */}
+                <button
+                  onClick={() => {
+                    onOpenBroadcastModal();
+                    setToolsMenuOpen(false);
+                  }}
+                  className="btn btn-ghost"
+                  style={{ justifyContent: 'flex-start', fontSize: 11, padding: '6px 10px', width: '100%' }}
+                >
+                  <Radio size={12} color="#f85149" />
+                  <span>NDMA CAP Broadcast</span>
+                </button>
+
+                {/* Audit */}
+                <button
+                  onClick={() => {
+                    onOpenAuditModal();
+                    setToolsMenuOpen(false);
+                  }}
+                  className="btn btn-ghost"
+                  style={{ justifyContent: 'flex-start', fontSize: 11, padding: '6px 10px', width: '100%' }}
+                >
+                  <FileText size={12} color="var(--text-secondary)" />
+                  <span>Audit Logs</span>
+                </button>
+
+                <div style={{ height: 1, background: 'var(--border-subtle)', margin: '4px 0' }} />
+
+                {/* Audio Toggle */}
+                <button
+                  onClick={() => {
+                    setAudioMuted(!audioMuted);
+                  }}
+                  className="btn btn-ghost"
+                  style={{ justifyContent: 'flex-start', fontSize: 11, padding: '6px 10px', width: '100%' }}
+                >
+                  {audioMuted ? <VolumeX size={12} color="var(--text-muted)" /> : <Volume2 size={12} color="#38bdf8" />}
+                  <span>Audio Alert Chimes: {audioMuted ? 'Muted' : 'Active'}</span>
+                </button>
+
+                {/* User Account */}
+                <button
+                  onClick={() => {
+                    onOpenAuthModal();
+                    setToolsMenuOpen(false);
+                  }}
+                  className="btn btn-ghost"
+                  style={{ justifyContent: 'flex-start', fontSize: 11, padding: '6px 10px', width: '100%' }}
+                >
+                  <UserCheck size={12} color="#38bdf8" />
+                  <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                    {currentUser.username === 'guest_citizen' ? 'Sign In / Register' : currentUser.fullName}
+                  </span>
+                </button>
+              </div>
+            )}
+          </div>
+
+          {/* Mobile Hamburger Button */}
           <button
             onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
             className="btn btn-secondary"
-            style={{ padding: 6, display: 'none' }}
+            style={{ padding: 6, display: 'none', height: 28, width: 28 }}
             id="mobile-menu-toggle"
             aria-label="Toggle navigation menu"
           >
-            {mobileMenuOpen ? <X size={16} /> : <Menu size={16} />}
+            {mobileMenuOpen ? <X size={15} /> : <Menu size={15} />}
           </button>
         </div>
       </div>
 
-      {/* Mobile Drawer Menu (When open on mobile) */}
+      {/* Mobile Drawer Menu */}
       {mobileMenuOpen && (
         <div
           style={{
             padding: '12px 16px',
-            background: '#0d1117',
+            background: 'var(--bg-surface)',
             borderBottom: '1px solid var(--border-medium)',
             display: 'flex',
             flexDirection: 'column',
-            gap: 8
+            gap: 10
           }}
         >
-          <div style={{ fontSize: 11, color: '#737373', textTransform: 'uppercase', fontWeight: 600 }}>
-            COMMAND SECTIONS
+          {/* Mode Switcher Mobile */}
+          {setOperationalMode && (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+              <label style={{ fontSize: 10, color: 'var(--text-muted)', fontWeight: 600 }}>OPERATIONAL MODE:</label>
+              <div className="mode-switcher" style={{ width: '100%' }}>
+                <button
+                  onClick={() => {
+                    setOperationalMode('LIVE');
+                    setMobileMenuOpen(false);
+                  }}
+                  className={`mode-btn ${operationalMode === 'LIVE' ? 'active-live' : ''}`}
+                  style={{ flex: 1, justifyContent: 'center' }}
+                >
+                  <span className="pulse-dot green" />
+                  <span>LIVE OPS</span>
+                </button>
+                <button
+                  onClick={() => {
+                    setOperationalMode('SIMULATION');
+                    setMobileMenuOpen(false);
+                  }}
+                  className={`mode-btn ${operationalMode === 'SIMULATION' ? 'active-sim' : ''}`}
+                  style={{ flex: 1, justifyContent: 'center' }}
+                >
+                  <span className="pulse-dot saffron" />
+                  <span>SIMULATION</span>
+                </button>
+              </div>
+            </div>
+          )}
+
+          {/* Sector Selector Mobile */}
+          <div>
+            <label style={{ fontSize: 10, color: 'var(--text-muted)', fontWeight: 600, display: 'block', marginBottom: 4 }}>
+              OPERATIONAL SECTOR:
+            </label>
+            <select
+              value={activeZone}
+              onChange={(e) => setActiveZone(e.target.value)}
+              className="form-select"
+              style={{ padding: '6px 10px', fontSize: 12 }}
+            >
+              <option value="zone-ndma-in">All India (National Grid)</option>
+              <option value="zone-mh-mum">Mumbai Metro (BMC)</option>
+              <option value="zone-dl-ncr">Delhi NCR (DDMA)</option>
+              <option value="zone-ka-blr">Bengaluru Urban (BBMP)</option>
+              <option value="zone-tn-chn">Chennai Metro (GCC)</option>
+              <option value="zone-od-bbs">Odisha Coastal (OSDMA)</option>
+              <option value="zone-wb-kol">Kolkata Emergency (KMC)</option>
+            </select>
           </div>
+
+          {/* Primary View Switcher Mobile */}
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 6 }}>
             <button
               onClick={() => handleSelectView('dashboard')}
               className={`btn ${activeView === 'dashboard' ? 'btn-primary' : 'btn-secondary'}`}
-              style={{ justifyContent: 'flex-start', padding: '8px 10px' }}
+              style={{ justifyContent: 'flex-start', fontSize: 12, padding: '8px 10px' }}
             >
-              <Activity size={14} /> War Room Map
-            </button>
-            <button
-              onClick={() => handleSelectView('public-report')}
-              className={`btn ${activeView === 'public-report' ? 'btn-primary' : 'btn-secondary'}`}
-              style={{ justifyContent: 'flex-start', padding: '8px 10px' }}
-            >
-              <AlertTriangle size={14} color="#f87171" /> Public 112 Portal
-            </button>
-            <button
-              onClick={() => handleSelectView('responder')}
-              className={`btn ${activeView === 'responder' ? 'btn-primary' : 'btn-secondary'}`}
-              style={{ justifyContent: 'flex-start', padding: '8px 10px' }}
-            >
-              <Radio size={14} /> Fleet Units
+              <Activity size={13} /> War Room
             </button>
             <button
               onClick={() => handleSelectView('hospital')}
               className={`btn ${activeView === 'hospital' ? 'btn-primary' : 'btn-secondary'}`}
-              style={{ justifyContent: 'flex-start', padding: '8px 10px' }}
+              style={{ justifyContent: 'flex-start', fontSize: 12, padding: '8px 10px' }}
             >
-              <Layers size={14} /> Trauma Centers
+              <Layers size={13} /> Trauma Beds
+            </button>
+            <button
+              onClick={() => handleSelectView('responder')}
+              className={`btn ${activeView === 'responder' ? 'btn-primary' : 'btn-secondary'}`}
+              style={{ justifyContent: 'flex-start', fontSize: 12, padding: '8px 10px' }}
+            >
+              <Radio size={13} /> Fleet Units
             </button>
             <button
               onClick={() => handleSelectView('command')}
               className={`btn ${activeView === 'command' ? 'btn-primary' : 'btn-secondary'}`}
-              style={{ justifyContent: 'flex-start', padding: '8px 10px' }}
+              style={{ justifyContent: 'flex-start', fontSize: 12, padding: '8px 10px' }}
             >
-              <Globe size={14} /> National HQ
+              <Globe size={13} /> National HQ
             </button>
           </div>
 
-          <div style={{ height: 1, background: 'var(--border-subtle)', margin: '4px 0' }} />
+          <div style={{ height: 1, background: 'var(--border-subtle)' }} />
+
+          {/* Mobile Tools & Theme Toggle */}
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 6 }}>
+            <button
+              onClick={() => {
+                onOpenMetricsModal();
+                setMobileMenuOpen(false);
+              }}
+              className="btn btn-secondary"
+              style={{ fontSize: 11, padding: '6px 8px', justifyContent: 'flex-start' }}
+            >
+              <Activity size={11} color="#16a34a" />
+              <span>APIs (9/9)</span>
+            </button>
+
+            {onToggleTheme && (
+              <button
+                onClick={() => {
+                  onToggleTheme();
+                  setMobileMenuOpen(false);
+                }}
+                className="btn btn-secondary"
+                style={{ fontSize: 11, padding: '6px 8px', justifyContent: 'flex-start' }}
+              >
+                {theme === 'dark' ? <Sun size={11} color="#FF9933" /> : <Moon size={11} color="#1d4ed8" />}
+                <span>{theme === 'dark' ? 'Light Mode' : 'Dark Mode'}</span>
+              </button>
+            )}
+
+            {onSyncExternalFeeds && (
+              <button
+                onClick={() => {
+                  onSyncExternalFeeds();
+                  setMobileMenuOpen(false);
+                }}
+                disabled={isSyncingFeeds}
+                className="btn btn-secondary"
+                style={{ fontSize: 11, padding: '6px 8px', justifyContent: 'flex-start' }}
+              >
+                <RefreshCw size={11} className={isSyncingFeeds ? 'spin-anim' : ''} color="#38bdf8" />
+                <span>Sync Feeds</span>
+              </button>
+            )}
+
+            <button
+              onClick={() => {
+                onOpenSimulationModal();
+                setMobileMenuOpen(false);
+              }}
+              className="btn btn-secondary"
+              style={{ fontSize: 11, padding: '6px 8px', justifyContent: 'flex-start' }}
+            >
+              <Sliders size={11} color="#FF9933" />
+              <span>Simulation</span>
+            </button>
+          </div>
 
           <button
             onClick={() => {
@@ -308,108 +657,13 @@ export const Navbar: React.FC<NavbarProps> = ({
               setMobileMenuOpen(false);
             }}
             className="btn btn-secondary"
-            style={{ justifyContent: 'flex-start' }}
+            style={{ fontSize: 11, padding: '8px 10px', justifyContent: 'center' }}
           >
-            <UserCheck size={14} color="#38bdf8" />{' '}
-            {currentUser.username === 'guest_citizen'
-              ? '🔑 Sign In / Register Account'
-              : `Logged in: ${currentUser.fullName} (${currentUser.role === 'NATIONAL_COMMANDER' ? 'Admin' : 'Citizen'})`}
+            <UserCheck size={12} color="#38bdf8" />
+            <span>{currentUser.username === 'guest_citizen' ? 'Sign In / Register' : `Logged In: ${currentUser.fullName}`}</span>
           </button>
         </div>
       )}
-
-      {/* Subheader: Sector Filter & Touch-Scrollable Action Toolbar */}
-      <div
-        style={{
-          minHeight: 38,
-          padding: '4px 14px',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'space-between',
-          background: '#0a0a0a',
-          gap: 8,
-          overflowX: 'auto'
-        }}
-        className="touch-scroll-x"
-      >
-        {/* Sector Selector */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexShrink: 0 }}>
-          <span style={{ fontSize: 10, color: '#737373', fontWeight: 600, textTransform: 'uppercase' }}>
-            SECTOR:
-          </span>
-          <select
-            value={activeZone}
-            onChange={(e) => setActiveZone(e.target.value)}
-            className="form-select"
-            style={{ padding: '3px 8px', fontSize: 11, width: 'auto', minWidth: 170, height: 26, background: '#141414' }}
-          >
-            <option value="zone-ndma-in">All Regions (National & Global)</option>
-            <option value="zone-mh-mum">Mumbai Metro (BMC Sector)</option>
-            <option value="zone-dl-ncr">Delhi NCR (DDMA Sector)</option>
-            <option value="zone-ka-blr">Bengaluru Urban (BBMP Sector)</option>
-            <option value="zone-tn-chn">Chennai Metro (GCC Sector)</option>
-            <option value="zone-od-bbs">Odisha Coastal (OSDMA Sector)</option>
-            <option value="zone-wb-kol">Kolkata Emergency (KMC Sector)</option>
-          </select>
-        </div>
-
-        {/* Horizontally Scrollable Action Chips */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexShrink: 0 }}>
-          {/* Live Sync External Feeds Button */}
-          {onSyncExternalFeeds && (
-            <button
-              onClick={onSyncExternalFeeds}
-              disabled={isSyncingFeeds}
-              className="btn btn-secondary"
-              style={{ fontSize: 11, padding: '3px 8px', height: 26 }}
-              title="Poll USGS and Open-Meteo for live updates"
-            >
-              <RefreshCw size={11} className={isSyncingFeeds ? 'spin-anim' : ''} color="#38bdf8" />
-              <span>{isSyncingFeeds ? 'Syncing...' : 'Sync Feeds'}</span>
-            </button>
-          )}
-
-          {/* AI Simulation */}
-          <button
-            onClick={onOpenSimulationModal}
-            className="btn btn-secondary"
-            style={{ fontSize: 11, padding: '3px 8px', height: 26 }}
-          >
-            <Sliders size={11} color="#fbbf24" />
-            <span>Simulation</span>
-          </button>
-
-          {/* CAP Broadcast */}
-          <button
-            onClick={onOpenBroadcastModal}
-            className="btn btn-secondary"
-            style={{ fontSize: 11, padding: '3px 8px', height: 26 }}
-          >
-            <Radio size={11} color="#f87171" />
-            <span>CAP Alert</span>
-          </button>
-
-          {/* Metrics */}
-          <button
-            onClick={onOpenMetricsModal}
-            className="btn btn-secondary"
-            style={{ fontSize: 11, padding: '3px 8px', height: 26 }}
-          >
-            <BarChart3 size={11} color="#a1a1a1" />
-            <span>Metrics</span>
-          </button>
-
-          {/* Audit Logs */}
-          <button
-            onClick={onOpenAuditModal}
-            className="btn btn-secondary"
-            style={{ fontSize: 11, padding: '3px 8px', height: 26 }}
-          >
-            <FileText size={11} color="#a1a1a1" />
-            <span>Audit</span>
-          </button>
-        </div>
-      </div>
     </header>
   );
 };

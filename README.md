@@ -1,204 +1,359 @@
-# AegisOps — AI-Powered Emergency Response & Disaster Coordination Platform
+# AegisOps — Autonomous AI-Powered Disaster Response & GIS Triage Platform
 
-> Production-grade, multi-tenant emergency management and disaster coordination platform that unifies multi-channel citizen reporting, AI-powered NLP/CV triage, real-time PostGIS spatial situational awareness, automated deduplication, resource dispatching, hospital surge load-balancing, and spatiotemporal risk forecasting.
+> **Mission-critical, enterprise-grade emergency management and disaster coordination platform** engineered for national, state, and municipal disaster management authorities (NDMA, SDMA, DDMA, Municipal War Rooms) with real-time earth observation telemetry, multilingual Indic NLP triage, automated fleet dispatch, and an edge-to-edge glassmorphic command HUD.
 
----
-
-## 📚 Documentation
-Complete architectural, API, database, and operational documentation is available in the [`docs/`](./docs) folder:
-- [**System Architecture (`docs/ARCHITECTURE.md`)**](./docs/ARCHITECTURE.md)
-- [**Database Design & PostGIS Model (`docs/DATABASE_DESIGN.md`)**](./docs/DATABASE_DESIGN.md)
-- [**AI Verification & Triage Pipeline (`docs/AI_PIPELINE.md`)**](./docs/AI_PIPELINE.md)
-- [**REST & WebSocket API Reference (`docs/API_REFERENCE.md`)**](./docs/API_REFERENCE.md)
-- [**Security & RBAC Matrix (`docs/SECURITY_AND_RBAC.md`)**](./docs/SECURITY_AND_RBAC.md)
-- [**DevOps & Kubernetes Deployment (`docs/DEVOPS_AND_DEPLOYMENT.md`)**](./docs/DEVOPS_AND_DEPLOYMENT.md)
-- [**Operator & User Manual / SOP (`docs/OPERATOR_AND_USER_MANUAL.md`)**](./docs/OPERATOR_AND_USER_MANUAL.md)
+[![Java](https://img.shields.io/badge/Java-21%20LTS-orange.svg)](https://openjdk.org/)
+[![Spring Boot](https://img.shields.io/badge/Spring%20Boot-3.3.4-brightgreen.svg)](https://spring.io/projects/spring-boot)
+[![React](https://img.shields.io/badge/React-18.3-61dafb.svg)](https://react.dev/)
+[![TypeScript](https://img.shields.io/badge/TypeScript-5.5-blue.svg)](https://www.typescriptlang.org/)
+[![Vite](https://img.shields.io/badge/Vite-6.x-purple.svg)](https://vitejs.dev/)
+[![Leaflet](https://img.shields.io/badge/Leaflet-1.9%20GIS-199900.svg)](https://leafletjs.com/)
+[![WebSocket](https://img.shields.io/badge/WebSocket-STOMP%20SockJS-blueviolet.svg)](https://stomp.github.io/)
+[![License](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
 
 ---
 
-## 🏛️ System Architecture
-
-```
-[Citizen Web / Mobile PWA] ---> [API Gateway / Express Server] ---> [Report Ingestion Pipeline]
-                                                                          |
-                                                                [Event Stream / WebSockets]
-                                                                          |
-        --------------------------------------------------------------------------------------------------
-        |                            |                                |                                  |
-  [NLP Service]               [Vision Service]             [Dedup / Cluster Service]          [Severity Fusion Service]
-  (NER, Needs Extraction,     (Hazard Classification,      (Spatiotemporal Haversine          (Multi-Modal Score [0-100],
-   Casualty Signals, Schema)   Damage Score, pHash)         + Embedding Similarity)            Dynamic SLA Allocation)
-        --------------------------------------------------------------------------------------------------
-                                                                          |
-                                                              [Incident Aggregate Root]
-                                                                          |
-        --------------------------------------------------------------------------------------------------
-        |                            |                                |                                  |
- [Control Room Live GIS]      [Field Responder App]          [Hospital Surge Triage]         [Hierarchical Aggregation]
- (Leaflet Threat Overlays,    (Task Briefs, Equipment        (Bed / ICU Monitors,             (City -> State -> National,
-  1-Click Unit Dispatch)       Checklists, Status Sync)       Inbound Casualty Radar)          Cross-City Resource Share)
-```
+## 📑 Table of Contents
+1. [Executive Overview & Architecture](#-executive-overview--architecture)
+2. [🔍 Transparent Audit: Real vs. Mock / Simulated Functions](#-transparent-audit-real-vs-mock--simulated-functions)
+3. [🏛️ Core System Capabilities](#️-core-system-capabilities)
+4. [🛠️ Technology Stack](#️-technology-stack)
+5. [🔑 User Roles & Seeded Credentials](#-user-roles--seeded-credentials)
+6. [🚀 Quick Start Guide](#-quick-start-guide)
+7. [📡 REST API & WebSocket Reference](#-rest-api--websocket-reference)
+8. [🧪 Testing & Verification](#-testing--verification)
+9. [📁 Project Directory Structure](#-project-directory-structure)
+10. [⚖️ Governance & License](#️-governance--license)
 
 ---
 
-## 🚀 Key Features
+## 🏛️ Executive Overview & Architecture
 
-### 1. Multi-Modal AI Verification & Triage Engine
-- **NLP Extraction**: Multilingual normalization, entity recognition, casualty signal parsing (`trapped`, `unconscious`, `severe trauma`), and structured needs object extraction (e.g. `boats: 2`, `ambulances: 3`, `extricationJaws: true`).
-- **Computer Vision**: Scene hazard categorization, structural damage severity rating (0.0 to 1.0), and perceptual image hashing (`pHash`) for duplicate/stock image verification.
-- **Spatiotemporal Deduplication**: Fuses Haversine geospatial proximity (1.2 km decay window), temporal delta, token-based text semantic similarity, and image hash overlap into a unified cluster score to merge corroborating citizen reports into an Incident aggregate root.
-- **Severity Fusion (0–100)**: Combines base disaster weights, logarithmic corroboration multipliers, casualty severity modifiers, CV damage scores, and population density into deterministic SLA-driven labels (`LOW`, `MEDIUM`, `HIGH`, `CRITICAL`).
+AegisOps is designed to compress the life-critical **"Golden Hour"** in natural and man-made disasters. It bridges the gap between raw citizen distress calls, high-resolution satellite/sensor feeds, municipal control rooms, tactical field teams (NDRF, SDRF, Fire, EMS), and hospital trauma networks.
 
-### 2. Live Operations GIS Hub (Control Room)
-- Interactive Leaflet map with dark cartography, color-coded severity markers, live vehicle locations, and hazard inundation/ember storm threat overlays.
-- Real-time Incident Triage Queue with search, category filtering, SLA aging countdowns, and unverified flags.
-- Complete Incident Inspection Drawer with merged report threads, evidence photo gallery, AI confidence breakdown, nearest available resource recommendations, and 1-click dispatch.
-- **Operator Manual Override**: Capability for human dispatchers to reclassify types or override severity scores with mandatory justification logging for model training feedback loops.
+```mermaid
+flowchart TD
+    subgraph SENSORS["Authoritative External Earth-Observation Sensors"]
+        NASA["NASA EONET v3 Satellite"]
+        USGS["USGS Real-Time Seismic Stream"]
+        GDACS["GDACS Multi-Hazard RSS/CAP"]
+        METEO["Open-Meteo Radar & Doppler"]
+        GLOFAS["GloFAS River Discharge Gauge"]
+        OSM["OpenStreetMap Overpass Facilities"]
+        OSRM["OSRM Road Corridors & Detours"]
+    end
 
-### 3. Field Responder Mobile & PWA View
-- Tactical mission briefs with GPS destination addresses and incident telemetry.
-- Equipment and life-support safety protocol checklists.
-- 1-tap live status updates (`EN_ROUTE` → `ON_SCENE` → `COMPLETED`) with field notes.
+    subgraph CLIENTS["Frontend Interfaces (Port 3000)"]
+        WAR["Command Center War Room (Glass HUD)"]
+        MOBILE["Mobile Responder & Citizen View"]
+        PWA["Offline PWA Distress Portal"]
+        AUDIO["Web Audio Synthesizer Engine"]
+    end
 
-### 4. Hospital Surge & Casualty Load-Balancing
-- Real-time general bed, ICU, and blood bank capacity monitoring.
-- Dynamic AI Inbound Casualty Forecasting (expected patient arrival surge, ETA, and critical/urgent/minor triage distribution).
-- Mass Casualty Incident (MCI) emergency surge protocol broadcast.
+    subgraph BACKEND["Spring Boot 3.3.4 Backend (Port 4000)"]
+        GATEWAY["Spring MVC REST Gateway (/api)"]
+        BROKER["Spring WebSocket STOMP Broker (/ws-emergency)"]
+        TRIAGE["Multilingual Indic NLP Triage (Devanagari/Dravidian)"]
+        FUSION["Mathematical Severity Fusion & SLA Engine"]
+        DISPATCH["Tactical Fleet Nearest-Unit Router"]
+        AUDIT["Immutable Audit Logger"]
+    end
 
-### 5. Predictive Analytics & Hazard Simulation
-- Spatiotemporal predictive models for flash flood river gauge surges and thermal ember storm dispersal.
-- Actionable directives and tactical equipment pre-positioning suggestions.
+    subgraph PERSISTENCE["ACID Data Store"]
+        H2["Persistent H2 File DB (./data/emergency_db) / MySQL"]
+    end
 
-### 6. Hierarchical Aggregation (City → State → National)
-- State-level aggregate metrics across subordinate city command centers.
-- Inter-city cross-jurisdiction resource-sharing request and approval workflow.
-- Common Alerting Protocol (CAP) public safety emergency broadcast engine.
-
----
-
-## 📂 Project Structure
-
-```
-├── db/
-│   └── schema.sql                  # PostgreSQL 16+ with PostGIS 3.4 DDL schema & seed data
-├── backend/
-│   ├── src/
-│   │   ├── types/index.ts          # Domain type definitions
-│   │   ├── db/memoryStore.ts       # In-memory store with realistic seed dataset
-│   │   ├── services/
-│   │   │   ├── ai/nlpService.ts    # NLP triage, entity & needs extraction
-│   │   │   ├── ai/visionService.ts # Computer vision hazard & damage scoring
-│   │   │   ├── ai/dedupClusterService.ts # Spatiotemporal & embedding clustering
-│   │   │   ├── ai/severityFusionService.ts # Multi-factor severity fusion (0-100)
-│   │   │   ├── reportIngestionService.ts # Citizen submission ingestion & deduplication
-│   │   │   ├── incidentService.ts  # Incident lifecycle, querying, and operator overrides
-│   │   │   ├── dispatchService.ts  # Nearest unit recommendation & dispatching
-│   │   │   ├── hospitalService.ts  # Hospital bed capacity & casualty forecast
-│   │   │   ├── predictionService.ts# Spatiotemporal risk & hazard simulation
-│   │   │   └── aggregationService.ts # Hierarchical rollups & cross-city transfers
-│   │   ├── routes/api.ts           # REST API endpoints matching spec
-│   │   ├── websocket/hub.ts        # Real-time WebSocket broadcasting hub
-│   │   ├── tests/pipeline.test.ts  # Automated unit test suite
-│   │   └── index.ts                # Server entry point
-│   ├── Dockerfile
-│   └── package.json
-├── frontend/
-│   ├── src/
-│   │   ├── components/
-│   │   │   ├── Navbar.tsx          # Top command navigation & CAP triggers
-│   │   │   ├── LiveMap.tsx         # Leaflet GIS map with pulsing markers & overlays
-│   │   │   ├── IncidentQueue.tsx   # Live triage queue with SLA timers
-│   │   │   ├── IncidentDetailModal.tsx # Full detail inspection, dispatch & override
-│   │   │   ├── CitizenReportingModal.tsx # Public reporting form & tracking ID tracker
-│   │   │   ├── ResponderView.tsx   # Mobile-ready tactical screen for field teams
-│   │   │   ├── HospitalTriagePanel.tsx # Hospital surge & inbound casualty radar
-│   │   │   ├── StateNationalRollup.tsx # State/National command aggregation
-│   │   │   ├── PredictionSimulationModal.tsx # Spatiotemporal simulation runner
-│   │   │   ├── BroadcastModal.tsx  # CAP public alert dissemination
-│   │   │   └── AuditLogModal.tsx   # Traceable AI & operator decision audit trail
-│   │   ├── services/api.ts         # Frontend API client
-│   │   ├── index.css               # Design system tokens & dark theme
-│   │   ├── App.tsx                 # Root application
-│   │   └── main.tsx
-│   ├── vite.config.ts
-│   └── package.json
-├── docker-compose.yml              # PostGIS, Redis, and Backend orchestration
-└── README.md
+    SENSORS -->|Live HTTP/REST Telemetry| GATEWAY
+    CLIENTS -->|REST Calls| GATEWAY
+    CLIENTS <-->|STOMP Subscriptions| BROKER
+    GATEWAY --> TRIAGE --> FUSION --> DISPATCH
+    GATEWAY --> AUDIT
+    GATEWAY <--> PERSISTENCE
+    BROKER <--> PERSISTENCE
 ```
 
 ---
 
-## ⚡ Quickstart
+## 🔍 Transparent Audit: Real vs. Mock / Simulated Functions
+
+AegisOps prioritizes absolute technical honesty and transparency. Below is an exhaustive matrix classifying every platform capability as **REAL** (production live integration) or **MOCK / SIMULATED** (development fallback or civil defense sandbox):
+
+| Subsystem / Feature | Classification | Technical Implementation Details | Live API / Data Source |
+|---|---|---|---|
+| **Spring Boot Core Backend** | **REAL** | Java 21, Spring Boot 3.3.4 micro-monolith on port 4000. Full dependency injection, Spring MVC controllers, Spring Data JPA repositories. | Self-hosted backend services |
+| **Data Persistence** | **REAL** | ACID-compliant persistent H2 file database located at `./data/emergency_db` (persists across restarts). Configurable to MySQL 8+ via `application-mysql.yml`. | Local file / MySQL DB |
+| **Real-Time WebSocket Broker** | **REAL** | In-memory STOMP broker over SockJS at `/ws-emergency`. Real pub/sub on `/topic/incidents`, `/topic/resources`, `/topic/alerts`, `/topic/hospitals`. | Spring WebSocket / STOMP |
+| **Security & RBAC** | **REAL** | Spring Security with stateless JWT Bearer token authentication, BCrypt password hashing (cost factor 12), and role-based route guards. | Spring Security & JJWT |
+| **Multilingual NLP Triage** | **REAL** | Regex and character-block Unicode parser (`MultilingualTriageService.java`) that normalizes Indic digits (०-९, ০-৯, ౦-౯, ௦-௯) and extracts casualties & trapped counts across Hindi, Marathi, Tamil, Telugu, and English. | Native JVM Unicode pattern engine |
+| **Severity Fusion & SLA Engine** | **REAL** | Mathematical composite scoring ($0-100$) factoring baseline hazard weight, logarithmically scaled corroboration counts, casualties, trapped victims, and SLA timers (10m, 20m, 45m, 90m). | `HeuristicPriorityScoringEngine.java` |
+| **Audit Logging Trail** | **REAL** | Persistent append-only audit trail (`AuditLogEntity`) capturing every operator override, previous/new severity, user ID, and justification reason. | Database audit table |
+| **USGS Seismic Telemetry** | **REAL** | Live integration querying real-time M4.5+ earthquake events worldwide, with Indian subcontinent bounding-box filtering and tsunami warning flags. | `https://earthquake.usgs.gov/earthquakes/feed/v1.0/summary/4.5_week.geojson` |
+| **NASA EONET Natural Events** | **REAL** | Live ingestion of NASA Earth Observatory active natural events (cyclones, wildfires, severe storms, volcanoes) with coordinates and category metadata. | `https://eonet.gsfc.nasa.gov/api/v3/events` |
+| **GDACS Disaster Alerts** | **REAL** | Live RSS/XML parser streaming UN / European Commission Global Disaster Alert and Coordination System feeds with alert levels (Red/Orange/Green). | `https://www.gdacs.org/xml/rss.xml` |
+| **Open-Meteo Weather Grid** | **REAL** | Live weather telemetry (temperature, humidity, precipitation rate, rain, wind velocity, gusts, pressure, and weather codes) with 5-minute memory caching. | `https://api.open-meteo.com/v1/forecast` |
+| **GloFAS River Flood Hydrology** | **REAL** | Live river discharge rate ($m^3/s$), 7-day mean/max forecasts, and return period risk assessment (2-yr, 5-yr, 20-yr flood levels). | `https://flood-api.open-meteo.com/v1/flood` |
+| **OSM Overpass Hospital GIS** | **REAL** | Live geospatial Overpass query harvesting emergency hospitals, trauma centres, and contact numbers within a radial bounding area around incident coordinates. | `https://overpass-api.de/api/interpreter` |
+| **OSRM Tactical Road Routing** | **REAL** | Live driving corridor calculation providing distance (meters), duration (seconds), ETA (minutes), and GeoJSON route geometry. | `https://router.project-osrm.org/route/v1/driving/...` |
+| **OSM Nominatim Geocoding** | **REAL** | Live forward and reverse geocoding resolving coordinates to administrative districts, postal codes, and street names. | `https://nominatim.openstreetmap.org` |
+| **Web Audio Synthesizer** | **REAL** | Web Audio API synthesizing pure harmonic alert frequencies (Critical siren at 880Hz, High alert at 660Hz, Medium chime at 520Hz, Low ping at 440Hz). | Browser Web Audio Context |
+| **Offline PWA Intake Queue** | **REAL** | IndexedDB / LocalStorage queue caching citizen distress reports during network blackouts, syncing automatically when connectivity resumes. | Browser Service Worker / Storage |
+| **GIS Leaflet Mapping** | **REAL** | Interactive Leaflet 1.9 GIS map with CartoDB Dark Matter / OSM cartography, dynamic district boundary choropleths, and layer filters. | Leaflet.js & CartoDB tiles |
+| **Theme & Glass HUD** | **REAL** | Pure CSS glassmorphic tokens with dynamic dark/light mode switching, zero black-background artifacts, and mobile responsive bottom sheets. | Native CSS Glass Engine |
+| **Voice Audio Transcription** | **MOCK / SIMULATED** | Voice recording is real (browser microphone recording via MediaRecorder API), but server transcription returns a simulated Indic NLP result. Running real Whisper STT requires dedicated GPU containers. | Client-side mock response |
+| **Computer Vision Structural Damage** | **MOCK / SIMULATED** | Citizen photo upload is supported, but damage estimation uses a simulated structural damage coefficient ($0.0 - 1.0$) rather than a live GPU YOLO/ResNet container. | Simulated damage multiplier |
+| **Civil Defense Simulation Sandbox** | **SIMULATED (By Design)** | `SIMULATION` mode is intentionally an isolated training drill sandbox allowing commanders to inject synthetic multi-district disasters without corrupting live operational data. | Civil Defense drill engine |
+| **GPS Vehicle Live Movement** | **SIMULATED** | Dispatch and status updates are real; however, live vehicle GPS movement on the map is simulated via route waypoints rather than connected OBD-II/AIS hardware trackers on physical ambulances. | Waypoint simulator |
+| **Hospital Live Bed Sensor Sync** | **SIMULATED** | Hospital locations and baseline bed counts are real (from OSM/NHM); however, real-time live bed occupancy fluctuates via local session overrides rather than live hospital EHR API integrations. | Local state override |
+| **External Feeds Fallback Baselines** | **FALLBACK (Graceful)** | If USGS, NASA, or Open-Meteo experience outages or rate limiting, adapters automatically provide calibrated fallback baselines clearly labeled with `FALLBACK BASELINE` in the UI. | Hardened fallback records |
+
+---
+
+## 🏛️ Core System Capabilities
+
+### 1. Zero-Top-Bar Glassmorphic Command HUD
+- **Full-Screen GIS Situational Map**: The legacy top command header has been eliminated, granting 100% vertical viewport height to the real-time Leaflet map and triage queues.
+- **Unified Frosted Sidebar**: All system controls—Sector Navigation, Mode Toggle (`LIVE` / `SIMULATION`), Alert Center, Audio Controls, Theme Switcher (`Light` / `Dark`), and WebSocket health—are consolidated in a sleek frosted glass sidebar (`backdrop-filter: blur(16px)`).
+- **Mobile Responsive Layout**: On small screens ($\le 768\text{px}$), the UI automatically transitions to an app-like layout with a 50px mobile header, segmented view switcher (`Map View`, `Incident Feed`, `Split View`), and touch-optimized bottom sheet modals.
+
+### 2. Multilingual Indic NLP Triage Engine
+Emergency reports submitted in native Indian scripts or spoken dialects are triaged automatically:
+- **Language Identification**: Automatically detects Devanagari (Hindi/Marathi), Kannada, Tamil, Telugu, Bengali, and English.
+- **Indic Numeral Translation**: Translates native numerals (`५ लोग`, `৩ জন`, `૪ લોકો`) to standard Arabic digits.
+- **Entity Extraction**: Parses trapped victims, casualty counts, and hazard categories to assign instant triage levels.
+
+### 3. Mathematical Severity Fusion & Dynamic SLA Engine
+Each incident receives an objective composite severity score ($0.00 - 100.00$):
+$$\text{Score} = \text{clamp}\Big(0.40 \cdot W_{\text{base}} + \min(20, 6 \cdot \log_2(N)) + \min(25, 4.5 \cdot C) + \min(25, 4.0 \cdot T) + 15 \cdot D_{\text{cv}}, 10, 100\Big)$$
+- **`CRITICAL` (Score $\ge 80$)**: **10-minute dispatch SLA** with critical auditory siren.
+- **`HIGH` (Score $60 - 79$)**: **20-minute dispatch SLA**.
+- **`MEDIUM` (Score $40 - 59$)**: **45-minute dispatch SLA**.
+- **`LOW` (Score $< 40$)**: **90-minute dispatch SLA**.
+
+When dispatch time exceeds the target deadline, the UI highlights the card as `BREACHED +Xm` in high-visibility crimson typography.
+
+### 4. Data Provenance & Authoritative Sources
+Every incident card in the queue displays its authoritative intake source:
+- `🏛️ BMC Disaster Control (Mumbai 1916)`
+- `🏛️ DDMA Emergency Helpline (Delhi 1077)`
+- `🏛️ BBMP War Room (Bengaluru 1533)`
+- `📱 Citizen PWA Portal`
+- `📞 Citizen 112 Helpline`
+- `🛰️ NASA EONET Satellite Feed`
+- `📡 USGS Seismic Sensor Net`
+
+### 5. Advanced Civil Defense Multi-Hazard Simulation Sandbox
+The platform features an advanced simulation engine for training drills and war games across national and state disaster cells:
+- **8 Calibrated Hazard Classes**:
+  1. 🌊 **Flash Flood & River Inundation** (`FLOOD`: hydrological basin surge % and rainfall downpour intensity)
+  2. 🌀 **Severe Tropical Cyclone** (`CYCLONE`: Category 1-5 gales and tidal storm surge)
+  3. 🌋 **High-Magnitude Earthquake** (`EARTHQUAKE`: Richter scale M4.0 - M8.5 and hypocenter depth)
+  4. 🏢 **Urban Structural Collapse** (`STRUCTURAL_COLLAPSE`: multi-story complex pancake failure with void-space entrapment)
+  5. ☣️ **Industrial Chemical / Toxic Gas Leak** (`GAS_LEAK`: pressurized cylinder rupture and downwind plume dispersion)
+  6. 🔥 **Commercial High-Rise Conflagration** (`FIRE`: multi-tier composite cladding fires and aerial platform deployments)
+  7. 🚆 **Mass Transit / Train Collision** (`ROAD_ACCIDENT`: multi-coach derailments and hospital MCI surge triage)
+  8. ⛰️ **Mountain Landslide & Debris Flow** (`LANDSLIDE`: slope failure and mountain highway corridor cutoffs)
+- **One-Click Real-World Presets**:
+  - *Mithi River Cloudburst & Flash Inundation (Mumbai)*
+  - *Cyclone Tauktae Category-4 Coastal Landfall (Western Coast)*
+  - *M6.8 Delhi Ridge Intraplate Earthquake (Delhi NCR)*
+  - *Chembur Petrochemical Ammonia Toxic Plume (Mumbai)*
+  - *Bengaluru Silk Board Metro Girder Collapse (Bengaluru)*
+  - *Odisha Super Cyclone Rapid Coast Ingress (Odisha Coastal)*
+- **Synthetic Distress Incident Injection**:
+  - Automatically spawns realistic simulated citizen distress calls in native Indic scripts (e.g. Hindi Devanagari) with trapped victims into the live queue, allowing operators to execute realistic triage and resource dispatch drills.
+- **Single-Click Sandbox Purge**:
+  - Cleanly wipes all synthetic drill alerts and simulated distress calls with zero residue on live production data (`POST /api/predictions/simulate/clear`).
+
+---
+
+## 🛠️ Technology Stack
+
+### Backend
+- **Framework**: Java 21 LTS + Spring Boot 3.3.4
+- **ORM & Persistence**: Spring Data JPA + Hibernate 6
+- **Database**: Persistent H2 file storage (`./data/emergency_db`) in local profile; MySQL 8.4 LTS in production profile
+- **Real-Time Protocol**: Spring WebSocket with STOMP over SockJS fallback
+- **Security**: Spring Security + Stateless JWT (JJWT 0.12.6) + BCrypt password hashing
+- **Build System**: Apache Maven 3.9+
+
+### Frontend
+- **Framework**: React 18.3.1 + TypeScript 5.5 + Vite 6.4
+- **GIS Cartography**: Leaflet 1.9 + CartoDB Dark Matter / OSM Tile Servers
+- **Real-Time Client**: `@stomp/stompjs` + `sockjs-client`
+- **Iconography & Styling**: Lucide React + Tailwind-compatible Glassmorphism tokens
+- **Audio Synthesis**: Native Web Audio API
+
+---
+
+## 🔑 User Roles & Seeded Credentials
+
+All pre-seeded demo accounts use the standard password: `Password@123`
+
+| Role | Username | Password | Organization / Jurisdiction | Operational Responsibilities |
+|---|---|---|---|---|
+| **Admin** | `admin` | `Password@123` | National Disaster Management Authority (NDMA) | National disaster oversight, system telemetry health, pan-India CAP alerts |
+| **Dispatcher** | `dispatcher_mum` | `Password@123` | Brihanmumbai Municipal Corp (BMC 1916) | Mumbai sector incident queue, manual overrides, rescue fleet dispatch |
+| **Dispatcher** | `dispatcher_del` | `Password@123` | Delhi Disaster Management Authority (DDMA) | Delhi NCR sector emergency triage and resource coordination |
+| **Field Responder** | `responder_ndrf` | `Password@123` | 5th Battalion NDRF (Pune / Mumbai QRT) | Mobile field screen, tactical navigation, status updates (`ON_SCENE`) |
+| **Field Responder** | `responder_als` | `Password@123` | 108 EMRI Advanced Life Support Ambulance | Medical evacuation, casualty transport, hospital trauma handover |
+| **Citizen** | `citizen_guest` | `Password@123` | Civilian Reporter | Citizen emergency reporting, voice distress recording, ticket tracking |
+
+---
+
+## 🚀 Quick Start Guide
 
 ### Prerequisites
-- Node.js 20+
-- Docker & Docker Compose (optional for PostGIS)
-
-### 1. Run with Docker Compose (PostGIS + Redis + Backend)
-```bash
-docker compose up --build
-```
-
-### 3. Deploying to Production (Render & Vercel)
-
-#### A. Backend Deployment on Render (Web Service)
-1. In [Render Dashboard](https://dashboard.render.com), click **New +** -> **Web Service**.
-2. Connect your GitHub repository (`https://github.com/fardeenakmal/AegisOps.git`).
-3. Configure settings:
-   - **Root Directory**: `backend` (or use the root `render.yaml`)
-   - **Environment**: `Node`
-   - **Build Command**: `npm install && npm run build`
-   - **Start Command**: `npm start`
-4. Set Environment Variables in Render:
-   - `PORT`: `10000` (Render sets this automatically)
-   - `NODE_ENV`: `production`
-   - `TWILIO_ACCOUNT_SID`, `TWILIO_AUTH_TOKEN`, `TWILIO_PHONE_NUMBER` (Optional / For live SMS alerts)
-   - `OPENWEATHER_API_KEY`, `OPENAI_API_KEY`, `GEMINI_API_KEY` (Optional)
-
-#### B. Frontend Deployment on Vercel
-1. In [Vercel Dashboard](https://vercel.com/dashboard), click **Add New...** -> **Project**.
-2. Import the `AegisOps` repository.
-3. Configure settings:
-   - **Root Directory**: `frontend`
-   - **Framework Preset**: `Vite`
-   - **Build Command**: `npm run build`
-   - **Output Directory**: `dist`
-4. Add Environment Variable:
-   - `VITE_API_URL`: `https://your-render-backend-url.onrender.com` (Your Render Web Service URL)
-5. Click **Deploy**.
+- **Java 21 LTS** (`java -version`)
+- **Maven 3.9+** (`mvn -v`)
+- **Node.js 20+ & npm 10+** (`node -v`, `npm -v`)
 
 ---
 
-## 🧪 Testing
-
-Run backend unit and pipeline integration tests:
+### Step 1: Clone the Repository
 ```bash
-npm run test:backend
+git clone https://github.com/fardeenakmal/AegisOps.git
+cd AegisOps
 ```
 
 ---
 
-## 📡 API Reference Summary
+### Step 2: Start Backend (Spring Boot — Port 4000)
+```bash
+cd backend
+mvn spring-boot:run
+```
+*The Spring Boot backend will start on **http://localhost:4000** and initialize the persistent database at `./data/emergency_db`.*
 
-| Method | Endpoint | Description |
+---
+
+### Step 3: Start Frontend (React + Vite — Port 3000)
+In a new terminal window:
+```bash
+cd frontend
+npm install
+npm run dev
+```
+*Open **http://localhost:3000** in your browser. The Vite dev server proxies `/api` and `/ws-emergency` directly to the Spring Boot backend on port 4000.*
+
+---
+
+### Alternative: Run with Single Root Command
+From the project root directory:
+```bash
+# Starts both Spring Boot backend and Vite frontend concurrently
+npm run dev
+```
+
+---
+
+### Alternative: Docker Compose (MySQL + Redis + Spring Boot)
+```bash
+docker compose up --build -d
+npm run dev:frontend
+```
+
+---
+
+## 📡 REST API & WebSocket Reference
+
+### Key REST Endpoints
+| HTTP Method | Endpoint | Description |
 |---|---|---|
-| `POST` | `/api/reports` | Ingest citizen emergency report with AI triage & deduplication |
-| `GET` | `/api/reports/:trackingId/status` | Track status of citizen report |
-| `GET` | `/api/incidents` | Filterable incident feed with spatial bounds and severity |
-| `GET` | `/api/incidents/:id` | Full incident details with merged report threads & AI metadata |
-| `PATCH` | `/api/incidents/:id` | Operator manual override (reclassify, severity adjustment, status) |
-| `GET` | `/api/resources` | Query emergency resources (ambulances, fire engines, boats, SAR) |
-| `GET` | `/api/resources/suggested/:incidentId` | Proximity-ranked units with estimated arrival times (ETA) |
-| `POST` | `/api/incidents/:id/dispatch` | Dispatch resource and generate structured task brief |
-| `PATCH` | `/api/resources/:id/status` | Field team status update (`EN_ROUTE`, `ON_SCENE`, `COMPLETED`) |
-| `GET` | `/api/hospitals` | Hospital bed & ICU capacities with inbound casualty forecasts |
-| `POST` | `/api/hospitals/:id/capacity` | Hospital self-reported capacity update |
-| `GET` | `/api/predictions` | Active spatiotemporal hazard alerts |
-| `POST` | `/api/predictions/simulate` | Execute hazard spread simulation |
-| `GET` | `/api/aggregation/state/:id` | State-level rollup and child city matrix |
-| `GET` | `/api/aggregation/national` | National disaster center aggregate statistics |
-| `POST` | `/api/aggregation/cross-request` | Submit inter-city resource reallocation request |
-| `PATCH` | `/api/aggregation/cross-request/:id/approve` | Approve cross-city resource transfer |
-| `POST` | `/api/alerts/broadcast` | Disseminate Common Alerting Protocol (CAP) emergency alert |
-| `GET` | `/api/audit-logs` | Retrieve immutable audit trail of all AI & operator decisions |
-| `WS` | `/ws/incidents` | Real-time WebSocket event stream |
+| `GET` | `/health` | System health probe and version status |
+| `POST` | `/api/auth/login` | Authenticate user, returns JWT Bearer token |
+| `POST` | `/api/auth/register` | Register civilian reporter profile |
+| `GET` | `/api/incidents` | Query active emergency requests with zone and severity filters |
+| `POST` | `/api/reports` | Ingest citizen distress report with Indic NLP triage |
+| `PATCH` | `/api/incidents/{id}` | Operator manual severity/status override with audit logging |
+| `GET` | `/api/teams` | Query tactical fleet registry (NDRF, SDRF, Ambulances, Fire) |
+| `GET` | `/api/teams/suggested/{incidentId}` | Calculate nearest available units using Haversine distance |
+| `POST` | `/api/incidents/{id}/dispatch` | Dispatch response team to incident |
+| `PATCH` | `/api/teams/{id}/status` | Update unit status (`AVAILABLE`, `DISPATCHED`, `ON_SCENE`, `RESOLVED`) |
+| `GET` | `/api/hospitals` | Harvest nearby hospitals via live OpenStreetMap Overpass GIS |
+| `GET` | `/api/zones` | Retrieve administrative risk zones and hazard scores |
+| `GET` | `/api/alerts` | Query active CAP alerts and cell broadcasts |
+| `POST` | `/api/alerts/broadcast` | Disseminate national/regional emergency alert |
+| `GET` | `/api/external/weather` | Query live Open-Meteo weather grid telemetry |
+| `GET` | `/api/external/flood` | Query live GloFAS river discharge hydrology |
+| `GET` | `/api/external/earthquakes` | Query live USGS seismic events |
+| `GET` | `/api/external/nasa-eonet` | Query live NASA EONET active natural events |
+| `GET` | `/api/external/gdacs` | Query live GDACS global multi-hazard stream |
+| `GET` | `/api/routes/tactical` | Calculate road driving route with OSRM |
+| `GET` | `/api/audit-logs` | Retrieve append-only operator governance logs |
+| `GET` | `/api/system/health` | Diagnostic probe for all 10 external sensor adapters |
+
+### WebSocket STOMP Channels
+- **Broker Endpoint**: `/ws-emergency` (SockJS fallback enabled)
+- **Subscribed Channels**:
+  - `/topic/incidents`: Real-time distress intake and status changes
+  - `/topic/resources`: Fleet movement and availability updates
+  - `/topic/alerts`: High-priority disaster broadcast alerts
+  - `/topic/hospitals`: Real-time trauma bed availability and MCI surges
+
+---
+
+## 🧪 Testing & Verification
+
+### Run Backend Unit & Integration Tests
+```bash
+cd backend
+mvn test
+```
+*Current test suite status: **BUILD SUCCESS** (Spring application context loads, entity mappings validated).*
+
+### Run Frontend Production Build & TypeScript Verification
+```bash
+cd frontend
+npm run build
+```
+*Current frontend build status: **Zero TypeScript errors**, production bundle compiled in `dist/`.*
+
+---
+
+## 📁 Project Directory Structure
+
+```text
+AegisOps/
+├── backend/                             # Spring Boot 3.3.4 (Java 21) Micro-Monolith
+│   ├── src/main/java/com/aegisops/platform/
+│   │   ├── adapter/                     # External sensor adapters (USGS, NASA, GDACS, OSRM, OSM, Meteo)
+│   │   ├── config/                      # WebSocket, Region, and Security configurations
+│   │   ├── controller/                  # Spring MVC REST controllers
+│   │   ├── dto/                         # Input and response transfer objects
+│   │   ├── entity/                      # JPA database entities (Incident, Team, Zone, AuditLog, etc.)
+│   │   ├── enums/                       # Priority, severity, and status enumerations
+│   │   ├── repository/                  # Spring Data JPA database repositories
+│   │   ├── security/                    # JWT filter, token provider, and BCrypt config
+│   │   └── service/                     # Business logic (Multilingual NLP, Priority Scoring, Dispatch)
+│   ├── src/main/resources/
+│   │   ├── application.yml              # Base Spring Boot configuration (Port 4000)
+│   │   ├── application-local.yml        # Local persistent H2 configuration
+│   │   └── application-mysql.yml        # Production MySQL configuration
+│   └── pom.xml                          # Maven build dependencies
+│
+├── frontend/                            # React 18 + Vite 6 + TypeScript HUD
+│   ├── src/
+│   │   ├── components/                  # Glassmorphic UI components (LiveMap, Queue, Modals, Sidebar)
+│   │   ├── services/                    # API client, STOMP WebSocket client, Web Audio synthesizer
+│   │   ├── types/                       # TypeScript domain interfaces
+│   │   ├── App.tsx                      # Main application shell with theme & mode state
+│   │   ├── main.tsx                     # React root bootstrap
+│   │   └── index.css                    # Frosted glass styling tokens & dark/light mode themes
+│   ├── package.json                     # Frontend dependencies
+│   └── vite.config.ts                   # Vite build config & backend proxy
+│
+├── docs/                                # Project Specifications
+│   └── SRS.md                           # Formal IEEE 830-compliant Software Requirements Specification
+│
+├── data/                                # Persistent database directory (emergency_db.mv.db)
+├── docker-compose.yml                   # Containerized deployment for MySQL, Redis, and Spring Boot
+├── package.json                         # Root orchestration scripts
+└── README.md                            # Comprehensive platform documentation
+```
+
+---
+
+## ⚖️ Governance & License
+
+- **License**: Released under the permissive **MIT License**.
+- **Public Safety Disclaimer**: Designed for emergency management coordination and training. While real-world sensor feeds (USGS, NASA, GDACS, Open-Meteo) provide live public telemetry, operational deployment in government Emergency Operations Centers (EOC) should be conducted in accordance with official National Disaster Management Authority (NDMA) standard operating procedures.

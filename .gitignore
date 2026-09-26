@@ -44,3 +44,17 @@ Thumbs.db
 .gemini/
 .agents/
 scratch/
+
+# Maven & Java Build Outputs
+target/
+**/target/
+*.class
+*.jar
+*.war
+*.nar
+*.ear
+
+# Database persistence
+data/
+*.mv.db
+*.trace.db

@@ -1,25 +1,32 @@
 {
   "name": "ai-powered-emergency-response-platform",
-  "version": "1.0.0",
-  "description": "Production-grade AI-Powered Emergency Response & Disaster Coordination Platform",
+  "version": "2.0.0",
+  "description": "Production-grade AI-Powered Emergency Response & Disaster Coordination Platform (Spring Boot & React Edition)",
   "scripts": {
-    "dev:backend": "cd backend && npm run dev",
+    "start": "bash -c 'npm run dev:backend & npm run dev:frontend'",
+    "dev": "bash -c 'npm run dev:backend & npm run dev:frontend'",
+    "dev:backend": "cd backend && mvn spring-boot:run",
+    "build:backend": "cd backend && mvn clean package -DskipTests",
+    "test:backend": "cd backend && mvn test",
     "dev:frontend": "cd frontend && npm run dev",
-    "build:backend": "cd backend && npm run build",
     "build:frontend": "cd frontend && npm run build",
-    "test:backend": "cd backend && npm test",
-    "docker:up": "docker compose up --build",
+    "build": "npm run build:backend && npm run build:frontend",
+    "test": "npm run test:backend",
+    "certs": "bash scripts/generate-certificates.sh",
+    "dev:ssl": "HTTPS=true npm run dev:frontend",
+    "dev:backend:ssl": "cd backend && mvn spring-boot:run -Dspring-boot.run.profiles=ssl",
+    "docker:up": "docker compose up --build -d",
     "docker:down": "docker compose down"
   },
   "keywords": [
     "disaster-management",
     "emergency-response",
-    "ai-triage",
-    "nlp",
-    "computer-vision",
-    "gis",
+    "spring-boot",
+    "mysql",
+    "stomp",
+    "react",
+    "vite",
     "leaflet",
-    "postgis",
-    "realtime"
+    "india"
   ]
 }

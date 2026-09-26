@@ -20,7 +20,10 @@ import {
   Gauge,
   Radio,
   ExternalLink,
-  ChevronRight
+  ChevronRight,
+  Navigation,
+  Route,
+  Waves
 } from 'lucide-react';
 import { Incident, IncidentType, SeverityLabel, Dispatch, Hospital } from '../types';
 import {
@@ -45,6 +48,9 @@ export const IncidentDetailModal: React.FC<IncidentDetailModalProps> = ({
   const [activeTab, setActiveTab] = useState<'overview' | 'reports' | 'dispatch' | 'override'>('overview');
   const [siteWeather, setSiteWeather] = useState<any>(null);
   const [hospitals, setHospitals] = useState<Hospital[]>([]);
+  const [suggestedUnits, setSuggestedUnits] = useState<any[]>([]);
+  const [selectedUnitId, setSelectedUnitId] = useState<string>('');
+  const [showRoutePreview, setShowRoutePreview] = useState<boolean>(true);
 
   // Dispatch Form State
   const [ambulancesCount, setAmbulancesCount] = useState(incident.needsSummary?.ambulances || 1);
@@ -54,6 +60,12 @@ export const IncidentDetailModal: React.FC<IncidentDetailModalProps> = ({
   const [priority, setPriority] = useState(incident.severityLabel === 'CRITICAL' ? 1 : 2);
   const [taskBrief, setTaskBrief] = useState(`Immediate emergency rescue and triage deployment at ${incident.address}`);
   const [dispatching, setDispatching] = useState(false);
+  const [toastMsg, setToastMsg] = useState<{ text: string; type: 'success' | 'error' | 'warning' } | null>(null);
+
+  const showToast = (text: string, type: 'success' | 'error' | 'warning' = 'success') => {
+    setToastMsg({ text, type });
+    setTimeout(() => setToastMsg(null), 3800);
+  };
 
   // Override Form State
   const [overrideSeverity, setOverrideSeverity] = useState<SeverityLabel>(incident.severityLabel);
@@ -66,12 +78,17 @@ export const IncidentDetailModal: React.FC<IncidentDetailModalProps> = ({
     // Fetch live weather at the exact coordinates of this incident
     const loadWeatherAndHospitals = async () => {
       try {
-        const [weather, hospList] = await Promise.all([
+        const [weather, hospList, units] = await Promise.all([
           fetchLiveWeather(incident.latitude, incident.longitude),
-          fetchHospitals(incident.zoneId)
+          fetchHospitals(incident.zoneId),
+          fetchSuggestedResources(incident.id)
         ]);
         setSiteWeather(weather);
         setHospitals(hospList);
+        setSuggestedUnits(units || []);
+        if (units && units.length > 0) {
+          setSelectedUnitId(units[0].id);
+        }
       } catch (e) {
         console.error('Error fetching incident metadata:', e);
       }
@@ -83,25 +100,26 @@ export const IncidentDetailModal: React.FC<IncidentDetailModalProps> = ({
     e.preventDefault();
     setDispatching(true);
     try {
-      const suggested = await fetchSuggestedResources(incident.id);
-      const targetUnit = suggested[0];
-      if (targetUnit) {
+      const targetUnitId = selectedUnitId || suggestedUnits[0]?.id;
+      if (targetUnitId) {
         await dispatchResource({
           incidentId: incident.id,
-          resourceId: targetUnit.id,
+          resourceId: targetUnitId,
           assignedByUserId: 'operator_mumbai',
           customTaskBrief: taskBrief
         });
       }
-      alert(`Tactical dispatch completed. Response teams en route.`);
-      onIncidentUpdated({
-        ...incident,
-        status: 'DISPATCHED',
-        dispatchedAt: new Date().toISOString()
-      });
-      onClose();
+      showToast('Tactical dispatch completed. Response teams en route.', 'success');
+      setTimeout(() => {
+        onIncidentUpdated({
+          ...incident,
+          status: 'DISPATCHED',
+          dispatchedAt: new Date().toISOString()
+        });
+        onClose();
+      }, 1000);
     } catch (err: any) {
-      alert(`Dispatch notice: ${err.message}`);
+      showToast(`Dispatch notice: ${err.message}`, 'error');
     } finally {
       setDispatching(false);
     }
@@ -110,7 +128,7 @@ export const IncidentDetailModal: React.FC<IncidentDetailModalProps> = ({
   const handleOverride = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!overrideReason.trim()) {
-      alert('Override reason is required for legal and audit compliance.');
+      showToast('Override reason is required for legal and audit compliance.', 'warning');
       return;
     }
     setOverriding(true);
@@ -123,11 +141,13 @@ export const IncidentDetailModal: React.FC<IncidentDetailModalProps> = ({
         status: overrideStatus,
         overrideReason
       });
-      alert('Operator override recorded and logged into immutable audit trail.');
-      onIncidentUpdated(updated);
-      onClose();
+      showToast('Operator override recorded and logged into immutable audit trail.', 'success');
+      setTimeout(() => {
+        onIncidentUpdated(updated);
+        onClose();
+      }, 1000);
     } catch (err: any) {
-      alert(`Override failed: ${err.message}`);
+      showToast(`Override failed: ${err.message}`, 'error');
     } finally {
       setOverriding(false);
     }
@@ -159,26 +179,48 @@ export const IncidentDetailModal: React.FC<IncidentDetailModalProps> = ({
           maxHeight: '92vh',
           display: 'flex',
           flexDirection: 'column',
-          background: '#0a0a0a',
-          border: '1px solid var(--border-medium)',
-          overflow: 'hidden'
+          background: 'var(--bg-card)',
+          border: '1px solid var(--border-default)',
+          overflow: 'hidden',
+          position: 'relative'
         }}
       >
+        {toastMsg && (
+          <div
+            style={{
+              padding: '8px 16px',
+              background: toastMsg.type === 'error' ? 'rgba(239, 68, 68, 0.95)' : (toastMsg.type === 'warning' ? 'rgba(245, 158, 11, 0.95)' : 'rgba(16, 185, 129, 0.95)'),
+              color: '#ffffff',
+              fontSize: 12,
+              fontWeight: 600,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              zIndex: 50,
+              borderBottom: '1px solid rgba(255,255,255,0.2)'
+            }}
+          >
+            <span>{toastMsg.text}</span>
+            <button onClick={() => setToastMsg(null)} style={{ background: 'none', border: 'none', color: '#fff', cursor: 'pointer', padding: 0 }}>
+              <X size={14} />
+            </button>
+          </div>
+        )}
         {/* Modal Header */}
         <div
           style={{
-            padding: '12px 16px',
+            padding: '12px 18px',
             borderBottom: '1px solid var(--border-subtle)',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'space-between',
-            background: '#111111',
+            background: 'var(--bg-surface)',
             gap: 8
           }}
         >
-          <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap', flex: 1 }}>
-            <span className="num-tabular" style={{ fontSize: 12, fontWeight: 700, color: '#ededed' }}>
-              {incident.trackingCode}
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap', flex: 1 }}>
+            <span className="num-tabular font-mono" style={{ fontSize: 12, fontWeight: 700, color: 'var(--text-primary)' }}>
+              #{incident.trackingCode}
             </span>
             <span className="badge badge-low" style={{ fontSize: 10 }}>{incident.type}</span>
             <span
@@ -192,25 +234,24 @@ export const IncidentDetailModal: React.FC<IncidentDetailModalProps> = ({
               style={{ fontSize: 10 }}
             >
               <span className="badge-dot" />
-              {incident.severityLabel} ({incident.severityScore.toFixed(0)}/100)
+              {incident.severityLabel} (<span className="num-tabular">{incident.severityScore.toFixed(0)}/100</span>)
             </span>
             <span className="badge badge-cyan" style={{ fontSize: 10 }}>{incident.status}</span>
           </div>
 
-          <button onClick={onClose} className="btn btn-ghost" style={{ padding: 4, flexShrink: 0 }}>
-            <X size={18} />
+          <button onClick={onClose} className="btn btn-ghost" style={{ padding: 4, flexShrink: 0, height: 26, width: 26 }}>
+            <X size={16} />
           </button>
         </div>
 
-        {/* Tab Navigation (Touch Scrollable) */}
+        {/* Tab Navigation (Vercel Underline Tabs) */}
         <div
-          className="touch-scroll-x"
+          className="touch-scroll-x tab-underline-group"
           style={{
-            display: 'flex',
             borderBottom: '1px solid var(--border-subtle)',
-            background: '#0a0a0a',
-            padding: '0 8px',
-            gap: 2
+            background: 'var(--bg-surface)',
+            padding: '0 12px',
+            gap: 4
           }}
         >
           {[
@@ -222,20 +263,8 @@ export const IncidentDetailModal: React.FC<IncidentDetailModalProps> = ({
             <button
               key={tab.id}
               onClick={() => setActiveTab(tab.id as any)}
-              style={{
-                padding: '8px 12px',
-                fontSize: 11,
-                fontWeight: activeTab === tab.id ? 700 : 500,
-                color: activeTab === tab.id ? '#ffffff' : '#737373',
-                borderBottom: activeTab === tab.id ? '2px solid #38bdf8' : '2px solid transparent',
-                background: 'transparent',
-                borderTop: 'none',
-                borderLeft: 'none',
-                borderRight: 'none',
-                cursor: 'pointer',
-                whiteSpace: 'nowrap',
-                flexShrink: 0
-              }}
+              className={`tab-underline-btn ${activeTab === tab.id ? 'active' : ''}`}
+              style={{ padding: '9px 12px', fontSize: 12 }}
             >
               {tab.label}
             </button>
@@ -249,13 +278,13 @@ export const IncidentDetailModal: React.FC<IncidentDetailModalProps> = ({
             <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
               {/* Title & Address */}
               <div>
-                <h2 style={{ fontSize: 15, fontWeight: 700, color: '#ffffff', lineHeight: 1.3, marginBottom: 4 }}>
+                <h2 style={{ fontSize: 15, fontWeight: 700, color: 'var(--text-primary)', lineHeight: 1.3, marginBottom: 4 }}>
                   {incident.title}
                 </h2>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 4, fontSize: 11, color: '#a1a1a1', flexWrap: 'wrap' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 4, fontSize: 11, color: 'var(--text-secondary)', flexWrap: 'wrap' }}>
                   <MapPin size={12} color="#38bdf8" />
                   <span>{incident.address}</span>
-                  <span className="num-tabular" style={{ color: '#737373', fontSize: 10 }}>
+                  <span className="num-tabular" style={{ color: 'var(--text-muted)', fontSize: 10 }}>
                     ({incident.latitude.toFixed(4)}°N, {incident.longitude.toFixed(4)}°E)
                   </span>
                 </div>
@@ -278,8 +307,8 @@ export const IncidentDetailModal: React.FC<IncidentDetailModalProps> = ({
                 </div>
 
                 <div className="vercel-card" style={{ padding: 10 }}>
-                  <div style={{ fontSize: 10, color: '#737373', fontWeight: 600, textTransform: 'uppercase' }}>CORROBORATION</div>
-                  <div className="num-tabular" style={{ fontSize: 18, fontWeight: 800, color: '#ffffff', marginTop: 2 }}>
+                  <div style={{ fontSize: 10, color: 'var(--text-muted)', fontWeight: 600, textTransform: 'uppercase' }}>CORROBORATION</div>
+                  <div className="num-tabular" style={{ fontSize: 18, fontWeight: 800, color: 'var(--text-primary)', marginTop: 2 }}>
                     {incident.reportCount} Reports
                   </div>
                 </div>
@@ -307,15 +336,15 @@ export const IncidentDetailModal: React.FC<IncidentDetailModalProps> = ({
                 >
                   <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
                     <CloudRain size={14} color="#38bdf8" />
-                    <div style={{ fontSize: 11, fontWeight: 600, color: '#ffffff' }}>
+                    <div style={{ fontSize: 11, fontWeight: 600, color: 'var(--text-primary)' }}>
                       Live Ground Weather: {siteWeather.weatherDescription}
                     </div>
-                    <div style={{ fontSize: 9, color: '#737373', marginLeft: 'auto' }}>
+                    <div style={{ fontSize: 9, color: 'var(--text-muted)', marginLeft: 'auto' }}>
                       Open-Meteo Telemetry
                     </div>
                   </div>
 
-                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: 12, fontSize: 11, color: '#ededed' }}>
+                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: 12, fontSize: 11, color: 'var(--text-secondary)' }}>
                     <span style={{ fontWeight: 700, color: '#38bdf8' }}>🌡️ {siteWeather.temperatureCelsius}°C</span>
                     <span>💨 {siteWeather.windSpeedKmh} km/h (Gusts: {siteWeather.windGustsKmh})</span>
                     <span>🌧️ {siteWeather.precipitationMmHr} mm/h</span>
@@ -326,7 +355,7 @@ export const IncidentDetailModal: React.FC<IncidentDetailModalProps> = ({
 
               {/* Required Fleet Resources */}
               <div className="vercel-panel" style={{ padding: 12 }}>
-                <div style={{ fontSize: 10, textTransform: 'uppercase', color: '#737373', fontWeight: 700, marginBottom: 8 }}>
+                <div style={{ fontSize: 10, textTransform: 'uppercase', color: 'var(--text-muted)', fontWeight: 700, marginBottom: 8 }}>
                   Required Emergency Fleets & Squads
                 </div>
                 <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
@@ -361,21 +390,43 @@ export const IncidentDetailModal: React.FC<IncidentDetailModalProps> = ({
               {incident.reports && incident.reports.length > 0 ? (
                 incident.reports.map((rep) => (
                   <div key={rep.id} className="vercel-card" style={{ padding: 12, display: 'flex', flexDirection: 'column', gap: 6 }}>
-                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                      <span className="num-tabular" style={{ fontSize: 11, fontWeight: 700, color: '#38bdf8' }}>{rep.trackingId}</span>
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 4 }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                        <span className="num-tabular" style={{ fontSize: 11, fontWeight: 700, color: '#38bdf8' }}>{rep.trackingId}</span>
+                        {rep.detectedLanguage && rep.detectedLanguage !== 'en' && (
+                          <span className="badge" style={{ background: '#312e81', color: '#c7d2fe', fontSize: 9, fontWeight: 700, textTransform: 'uppercase' }}>
+                            {rep.detectedLanguage} Vernacular
+                          </span>
+                        )}
+                        {rep.submissionChannel?.includes('VOICE') && (
+                          <span className="badge" style={{ background: '#064e3b', color: '#a7f3d0', fontSize: 9, fontWeight: 700 }}>
+                            🎙️ Bhashini Voice
+                          </span>
+                        )}
+                      </div>
                       <span className="badge badge-success" style={{ fontSize: 10 }}>
                         Authenticity: {(rep.authenticityScore * 100).toFixed(0)}%
                       </span>
                     </div>
-                    <p style={{ fontSize: 12, color: '#ededed', lineHeight: 1.4 }}>{rep.rawText}</p>
-                    <div style={{ fontSize: 10, color: '#737373', display: 'flex', justifyContent: 'space-between', marginTop: 2 }}>
+
+                    <div style={{ fontSize: 12, color: 'var(--text-primary)', lineHeight: 1.4, fontWeight: 500 }}>
+                      {rep.rawText}
+                    </div>
+
+                    {rep.normalizedText && rep.normalizedText !== rep.rawText && (
+                      <div style={{ fontSize: 11, color: '#93c5fd', background: 'rgba(30, 58, 138, 0.25)', padding: '5px 8px', borderRadius: 4, lineHeight: 1.4 }}>
+                        <b style={{ color: '#60a5fa' }}>EOC Translation:</b> {rep.normalizedText}
+                      </div>
+                    )}
+
+                    <div style={{ fontSize: 10, color: 'var(--text-muted)', display: 'flex', justifyContent: 'space-between', marginTop: 2 }}>
                       <span>Channel: {rep.submissionChannel}</span>
                       <span>{new Date(rep.submittedAt).toLocaleTimeString()}</span>
                     </div>
                   </div>
                 ))
               ) : (
-                <div style={{ textAlign: 'center', padding: 24, color: '#737373' }}>
+                <div style={{ textAlign: 'center', padding: 24, color: 'var(--text-muted)' }}>
                   No individual citizen reports linked to this consolidated incident.
                 </div>
               )}
@@ -385,6 +436,140 @@ export const IncidentDetailModal: React.FC<IncidentDetailModalProps> = ({
           {/* TAB 3: TACTICAL FLEET DISPATCH */}
           {activeTab === 'dispatch' && (
             <form onSubmit={handleDispatch} style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+              {/* OSRM Road-Network Proximity Ranked Units */}
+              <div className="vercel-panel" style={{ padding: 12 }}>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 }}>
+                  <div style={{ fontSize: 11, textTransform: 'uppercase', color: '#38bdf8', fontWeight: 700, display: 'flex', alignItems: 'center', gap: 5 }}>
+                    <Route size={13} /> OSRM Road-Network Ranked Fleet
+                  </div>
+                  <span style={{ fontSize: 9, color: 'var(--text-muted)' }}>
+                    Turn-by-turn road routing & flood clearance verified
+                  </span>
+                </div>
+
+                {suggestedUnits.length === 0 ? (
+                  <div style={{ fontSize: 11, color: 'var(--text-muted)', padding: 8 }}>
+                    Calculating road routes for available fleet units...
+                  </div>
+                ) : (
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                    {suggestedUnits.map((u) => {
+                      const isSelected = (selectedUnitId || suggestedUnits[0]?.id) === u.id;
+                      return (
+                        <div
+                          key={u.id}
+                          onClick={() => {
+                            setSelectedUnitId(u.id);
+                            if (u.routeDetails?.turnByTurnInstructions?.length > 0) {
+                              setTaskBrief(
+                                `PRIORITY DISPATCH to ${incident.address}. Road Distance: ${(u.distanceMeters / 1000).toFixed(1)} km, Est. Arrival: ${u.etaMinutes} mins.\n• Route: ${u.routeDetails.turnByTurnInstructions.slice(0, 3).join('; ')}`
+                              );
+                            }
+                          }}
+                          style={{
+                            padding: '8px 10px',
+                            background: isSelected ? 'rgba(56, 189, 248, 0.12)' : 'var(--bg-surface)',
+                            border: `1px solid ${isSelected ? '#0284c7' : 'var(--border-subtle)'}`,
+                            borderRadius: 6,
+                            cursor: 'pointer',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'space-between',
+                            transition: 'all 0.15s ease'
+                          }}
+                        >
+                          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                            <input
+                              type="radio"
+                              name="selected_resource"
+                              checked={isSelected}
+                              onChange={() => setSelectedUnitId(u.id)}
+                              style={{ accentColor: '#0284c7' }}
+                            />
+                            <div>
+                              <div style={{ fontSize: 12, fontWeight: 600, color: 'var(--text-primary)' }}>
+                                {u.callSign}
+                              </div>
+                              <div style={{ fontSize: 10, color: 'var(--text-muted)' }}>
+                                Base: {u.baseStationName} &bull; Crew: {u.crewCount}
+                              </div>
+                            </div>
+                          </div>
+
+                          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                            {u.isReroutedForFlood && (
+                              <span
+                                style={{
+                                  fontSize: 9,
+                                  background: 'rgba(239, 68, 68, 0.15)',
+                                  border: '1px solid rgba(239, 68, 68, 0.3)',
+                                  color: '#f87171',
+                                  padding: '1px 5px',
+                                  borderRadius: 4,
+                                  fontWeight: 600
+                                }}
+                              >
+                                ⚠️ Flood Detour
+                              </span>
+                            )}
+                            <div style={{ textAlign: 'right' }}>
+                              <div style={{ fontSize: 12, fontWeight: 700, color: '#38bdf8' }}>
+                                {u.etaMinutes} min ETA
+                              </div>
+                              <div style={{ fontSize: 10, color: 'var(--text-secondary)' }}>
+                                {(u.distanceMeters / 1000).toFixed(1)} km road
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
+
+              {/* Turn-by-Turn Route Preview Drawer */}
+              {(() => {
+                const curSelected = suggestedUnits.find((u) => u.id === (selectedUnitId || suggestedUnits[0]?.id));
+                const instructions: string[] = curSelected?.routeDetails?.turnByTurnInstructions || [];
+                if (instructions.length === 0) return null;
+
+                return (
+                  <div
+                    className="vercel-panel"
+                    style={{
+                      padding: 10,
+                      background: 'var(--bg-surface)',
+                      border: '1px solid rgba(56, 189, 248, 0.2)'
+                    }}
+                  >
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 6 }}>
+                      <span style={{ fontSize: 10, fontWeight: 700, textTransform: 'uppercase', color: '#38bdf8', display: 'flex', alignItems: 'center', gap: 4 }}>
+                        <Navigation size={11} /> Turn-by-Turn Driving Directions (OSRM)
+                      </span>
+                      <span style={{ fontSize: 9, color: 'var(--text-muted)' }}>
+                        Emergency Siren Transit
+                      </span>
+                    </div>
+
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 3, maxHeight: 110, overflowY: 'auto' }}>
+                      {instructions.map((step, idx) => (
+                        <div key={idx} style={{ fontSize: 11, color: 'var(--text-secondary)', display: 'flex', alignItems: 'flex-start', gap: 5 }}>
+                          <span style={{ color: '#38bdf8', fontWeight: 700, minWidth: 16 }}>{idx + 1}.</span>
+                          <span>{step}</span>
+                        </div>
+                      ))}
+                    </div>
+
+                    {curSelected?.routeDetails?.hazardWarnings?.map((w: string, i: number) => (
+                      <div key={i} style={{ marginTop: 6, fontSize: 10, color: '#fca5a5', background: 'rgba(239, 68, 68, 0.1)', padding: '3px 6px', borderRadius: 4 }}>
+                        {w}
+                      </div>
+                    ))}
+                  </div>
+                );
+              })()}
+
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(130px, 1fr))', gap: 8 }}>
                 <div>
                   <label className="form-label">ALS Ambulances</label>

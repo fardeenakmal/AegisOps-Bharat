@@ -1,0 +1,33 @@
+server:
+  port: 4000
+
+spring:
+  application:
+    name: aegisops-platform
+  profiles:
+    active: ${SPRING_PROFILES_ACTIVE:local}
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,prometheus
+  endpoint:
+    health:
+      show-details: always
+
+aegisops:
+  jwt:
+    secret: ${JWT_SECRET:aegisops-super-secure-production-jwt-key-2026-spring-edition-minimum-32-chars}
+    expiration-ms: 604800000 # 7 days
+  region:
+    default-code: INDIA
+    default-center-lat: 22.0
+    default-center-lon: 78.9629
+    default-zoom: 5
+    bounds:
+      min-lat: 6.0
+      max-lat: 37.5
+      min-lon: 68.0
+      max-lon: 97.5
+

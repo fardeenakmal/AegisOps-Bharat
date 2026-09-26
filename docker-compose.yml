@@ -1,21 +1,21 @@
 version: '3.8'
 
 services:
-  postgres-postgis:
-    image: postgis/postgis:16-3.4
-    container_name: emergency-postgis
+  mysql:
+    image: mysql:8.4-lts
+    container_name: emergency-mysql
     environment:
-      POSTGRES_DB: emergency_db
-      POSTGRES_USER: emergency_user
-      POSTGRES_PASSWORD: emergency_secure_pass_2026
+      MYSQL_DATABASE: emergency_db
+      MYSQL_USER: emergency_user
+      MYSQL_PASSWORD: emergency_secure_pass_2026
+      MYSQL_ROOT_PASSWORD: root_secure_pass_2026
     ports:
-      - "5432:5432"
+      - "3306:3306"
     volumes:
-      - pgdata:/var/lib/postgresql/data
-      - ./db/schema.sql:/docker-entrypoint-initdb.d/01-init.sql
+      - mysqldata:/var/lib/mysql
     restart: unless-stopped
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U emergency_user -d emergency_db"]
+      test: ["CMD-SHELL", "mysqladmin ping -h localhost -u emergency_user -pemergency_secure_pass_2026 || exit 1"]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -33,17 +33,20 @@ services:
       dockerfile: Dockerfile
     container_name: emergency-backend
     environment:
-      PORT: 4000
-      DATABASE_URL: postgres://emergency_user:emergency_secure_pass_2026@postgres-postgis:5432/emergency_db
-      REDIS_URL: redis://redis:6379
+      SERVER_PORT: 4000
+      SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/emergency_db?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC
+      SPRING_DATASOURCE_USERNAME: emergency_user
+      SPRING_DATASOURCE_PASSWORD: emergency_secure_pass_2026
+      SPRING_FLYWAY_ENABLED: "true"
+      JWT_SECRET: aegisops-super-secure-production-jwt-key-2026-spring-edition-minimum-32-chars
     ports:
       - "4000:4000"
     depends_on:
-      postgres-postgis:
+      mysql:
         condition: service_healthy
       redis:
         condition: service_started
     restart: unless-stopped
 
 volumes:
-  pgdata:
+  mysqldata:

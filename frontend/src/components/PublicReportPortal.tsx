@@ -18,9 +18,12 @@ import {
   Shield,
   HelpCircle,
   Clock,
-  ArrowRight
+  ArrowRight,
+  Mic,
+  X
 } from 'lucide-react';
 import { submitCitizenReport, reverseGeocode, searchLocations } from '../services/api';
+import { VoiceRecorderWidget } from './VoiceRecorderWidget';
 
 interface PublicReportPortalProps {
   onReportSubmitted: () => void;
@@ -46,6 +49,36 @@ export const PublicReportPortal: React.FC<PublicReportPortalProps> = ({
   const [searchResults, setSearchResults] = useState<any[]>([]);
   const [searching, setSearching] = useState(false);
   const [submissionResult, setSubmissionResult] = useState<any>(null);
+  const [showVoiceRecorder, setShowVoiceRecorder] = useState(false);
+  const [englishTranslation, setEnglishTranslation] = useState('');
+  const [detectedLanguage, setDetectedLanguage] = useState('en');
+  const [voiceAudioBase64, setVoiceAudioBase64] = useState<string | undefined>(undefined);
+  const [portalNotice, setPortalNotice] = useState<string | null>(null);
+
+  const showNotice = (msg: string) => {
+    setPortalNotice(msg);
+    setTimeout(() => setPortalNotice(null), 4000);
+  };
+
+  const handleVoiceTranscription = (data: {
+    transcript: string;
+    englishTranslation: string;
+    detectedLanguage: string;
+    audioBase64?: string;
+    nlpTriage?: any;
+  }) => {
+    setRawText(data.transcript);
+    setEnglishTranslation(data.englishTranslation);
+    setDetectedLanguage(data.detectedLanguage);
+    if (data.audioBase64) setVoiceAudioBase64(data.audioBase64);
+    if (data.nlpTriage?.estimatedTrapped) setTrappedCount(String(data.nlpTriage.estimatedTrapped));
+    if (data.nlpTriage?.estimatedCasualties) setCasualtiesCount(String(data.nlpTriage.estimatedCasualties));
+    if (data.nlpTriage?.incidentType) {
+      if (['FLOOD', 'FIRE', 'EARTHQUAKE', 'GAS_LEAK'].includes(data.nlpTriage.incidentType)) {
+        setCategory(data.nlpTriage.incidentType as any);
+      }
+    }
+  };
 
   // Quick situation presets
   const situationPresets = [
@@ -58,7 +91,7 @@ export const PublicReportPortal: React.FC<PublicReportPortalProps> = ({
 
   const handleDetectGPS = () => {
     if (!navigator.geolocation) {
-      alert('Geolocation is not supported by your browser.');
+      showNotice('Geolocation is not supported by your browser.');
       return;
     }
     setIsGeolocating(true);
@@ -80,7 +113,7 @@ export const PublicReportPortal: React.FC<PublicReportPortalProps> = ({
         }
       },
       (err) => {
-        alert(`Location access notice: ${err.message}. Please enter address manually.`);
+        showNotice(`Location access notice: ${err.message}. Please enter address manually.`);
         setIsGeolocating(false);
       },
       { enableHighAccuracy: true, timeout: 10000 }
@@ -115,7 +148,7 @@ export const PublicReportPortal: React.FC<PublicReportPortalProps> = ({
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!rawText.trim()) {
-      alert('Please describe what is happening in the incident description box.');
+      showNotice('Please describe what is happening in the incident description box.');
       return;
     }
 
@@ -125,19 +158,22 @@ export const PublicReportPortal: React.FC<PublicReportPortalProps> = ({
 
       const res = await submitCitizenReport({
         rawText: fullText,
+        normalizedText: englishTranslation ? `[Category: ${category}] ${englishTranslation}` : undefined,
+        detectedLanguage,
         latitude,
         longitude,
         reportedAddress,
         reporterName: reporterName || undefined,
         reporterContact: reporterContact !== '+91-' ? reporterContact : undefined,
-        submissionChannel: 'MOBILE_PWA',
-        zoneId: 'zone-ndma-in'
+        submissionChannel: voiceAudioBase64 ? 'VOICE_PWA' : 'MOBILE_PWA',
+        zoneId: 'zone-ndma-in',
+        voiceAudioBase64
       });
 
       setSubmissionResult(res);
       onReportSubmitted();
     } catch (err: any) {
-      alert(`Submission failed: ${err.message || 'Server error'}`);
+      showNotice(`Submission notice: ${err.message || 'Server error'}`);
     } finally {
       setIsSubmitting(false);
     }
@@ -156,16 +192,37 @@ export const PublicReportPortal: React.FC<PublicReportPortalProps> = ({
         boxSizing: 'border-box'
       }}
     >
+      {portalNotice && (
+        <div
+          style={{
+            padding: '10px 16px',
+            background: 'rgba(239, 68, 68, 0.95)',
+            color: '#ffffff',
+            fontSize: 13,
+            fontWeight: 600,
+            borderRadius: 8,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            boxShadow: '0 4px 12px rgba(0,0,0,0.4)'
+          }}
+        >
+          <span>{portalNotice}</span>
+          <button onClick={() => setPortalNotice(null)} style={{ background: 'none', border: 'none', color: '#fff', cursor: 'pointer' }}>
+            <X size={15} />
+          </button>
+        </div>
+      )}
+
       {/* Public Emergency Header */}
       <div
-        className="vercel-panel"
         style={{
-          padding: '12px 14px',
+          padding: '12px 16px',
           display: 'flex',
           flexDirection: 'column',
           gap: 10,
-          background: 'linear-gradient(135deg, rgba(239, 68, 68, 0.14), rgba(17, 17, 17, 0.98))',
-          border: '1px solid rgba(239, 68, 68, 0.35)',
+          background: '#161b22',
+          border: '1px solid #30363d',
           borderRadius: 8
         }}
       >
@@ -173,24 +230,27 @@ export const PublicReportPortal: React.FC<PublicReportPortalProps> = ({
           <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
             <div
               style={{
-                width: 38,
-                height: 38,
-                borderRadius: 8,
-                background: '#ef4444',
+                width: 34,
+                height: 34,
+                borderRadius: 6,
+                background: 'rgba(248, 81, 73, 0.15)',
+                border: '1px solid rgba(248, 81, 73, 0.4)',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
-                boxShadow: '0 0 12px rgba(239, 68, 68, 0.5)',
                 flexShrink: 0
               }}
             >
-              <AlertTriangle size={20} color="#ffffff" />
+              <AlertTriangle size={18} color="#f85149" />
             </div>
             <div>
-              <h1 style={{ fontSize: 15, fontWeight: 700, color: '#ffffff', letterSpacing: '-0.01em', margin: 0 }}>
-                112 Citizen Emergency Portal
-              </h1>
-              <p style={{ fontSize: 11, color: '#a1a1a1', margin: '2px 0 0' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                <h1 style={{ fontSize: 14, fontWeight: 600, color: '#f0f6fc', letterSpacing: '-0.01em', margin: 0 }}>
+                  112 Citizen Emergency Portal
+                </h1>
+                <span className="badge badge-critical" style={{ fontSize: 9, padding: '1px 5px' }}>PUBLIC INGEST</span>
+              </div>
+              <p style={{ fontSize: 11, color: '#8b949e', margin: '2px 0 0' }}>
                 Direct Dispatch &bull; NDMA &bull; Police &bull; Fire &bull; 108 Ambulance
               </p>
             </div>
@@ -198,15 +258,16 @@ export const PublicReportPortal: React.FC<PublicReportPortalProps> = ({
 
           <a
             href="tel:112"
-            className="btn btn-danger"
+            className="btn-danger"
             style={{
               padding: '6px 12px',
               fontSize: 12,
-              fontWeight: 700,
+              fontWeight: 600,
               textDecoration: 'none',
               display: 'inline-flex',
               alignItems: 'center',
-              gap: 6
+              gap: 6,
+              borderRadius: 6
             }}
           >
             <Phone size={13} />
@@ -217,39 +278,39 @@ export const PublicReportPortal: React.FC<PublicReportPortalProps> = ({
 
       {submissionResult ? (
         /* Report Successfully Submitted Card */
-        <div className="vercel-panel" style={{ padding: 20, display: 'flex', flexDirection: 'column', gap: 14, textAlign: 'center' }}>
+        <div style={{ padding: 20, background: '#161b22', border: '1px solid #30363d', borderRadius: 8, display: 'flex', flexDirection: 'column', gap: 14, textAlign: 'center' }}>
           <div
             style={{
-              width: 52,
-              height: 52,
+              width: 48,
+              height: 48,
               borderRadius: '50%',
-              background: 'rgba(16, 185, 129, 0.15)',
-              border: '2px solid #10b981',
+              background: 'rgba(46, 160, 67, 0.15)',
+              border: '1px solid #2ea043',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
               margin: '0 auto'
             }}
           >
-            <CheckCircle2 size={28} color="#10b981" />
+            <CheckCircle2 size={26} color="#3fb950" />
           </div>
 
           <div>
-            <h2 style={{ fontSize: 17, fontWeight: 700, color: '#ffffff', margin: '0 0 4px' }}>
+            <h2 style={{ fontSize: 16, fontWeight: 600, color: '#f0f6fc', margin: '0 0 4px' }}>
               Emergency Incident Dispatched
             </h2>
-            <p style={{ fontSize: 12, color: '#a1a1a1', margin: 0, lineHeight: 1.4 }}>
+            <p style={{ fontSize: 12, color: '#8b949e', margin: 0, lineHeight: 1.4 }}>
               Your report has been analyzed by AI Multilingual Triage and routed to regional first responders.
             </p>
           </div>
 
           {/* Tracking Ticket */}
           <div
-            className="vercel-card"
             style={{
               padding: 14,
-              background: '#0a0a0a',
-              border: '1px solid rgba(56, 189, 248, 0.3)',
+              background: '#0d1117',
+              border: '1px solid #30363d',
+              borderRadius: 6,
               display: 'flex',
               flexDirection: 'column',
               gap: 8,
@@ -257,22 +318,22 @@ export const PublicReportPortal: React.FC<PublicReportPortalProps> = ({
             }}
           >
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-              <span style={{ fontSize: 10, color: '#737373', textTransform: 'uppercase', fontWeight: 600 }}>
+              <span style={{ fontSize: 10, color: '#8b949e', textTransform: 'uppercase', fontWeight: 600, letterSpacing: '0.05em' }}>
                 DISASTER TRACKING ID
               </span>
               <span className="badge badge-critical" style={{ fontSize: 9 }}>HIGH PRIORITY DISPATCH</span>
             </div>
 
-            <div className="num-tabular" style={{ fontSize: 20, fontWeight: 800, color: '#38bdf8' }}>
+            <div className="num-tabular" style={{ fontSize: 18, fontWeight: 700, color: '#58a6ff', fontFamily: 'monospace' }}>
               {submissionResult.report?.trackingId || 'TRK-IND-2026-LIVE'}
             </div>
 
-            <div style={{ fontSize: 12, color: '#ededed' }}>
-              📍 <b>Location:</b> {submissionResult.incident?.address || reportedAddress}
+            <div style={{ fontSize: 12, color: '#c9d1d9' }}>
+              📍 <b style={{ color: '#f0f6fc' }}>Location:</b> {submissionResult.incident?.address || reportedAddress}
             </div>
 
-            <div style={{ fontSize: 11, color: '#a1a1a1' }}>
-              🕒 <b>Timestamp:</b> {new Date().toLocaleTimeString()} &bull; <b>Status:</b> Live in National Command Matrix
+            <div style={{ fontSize: 11, color: '#8b949e' }}>
+              🕒 <b style={{ color: '#c9d1d9' }}>Timestamp:</b> {new Date().toLocaleTimeString()} &bull; <b>Status:</b> Live in National Command Matrix
             </div>
           </div>
 
@@ -280,8 +341,8 @@ export const PublicReportPortal: React.FC<PublicReportPortalProps> = ({
             {onNavigateToWarRoom && (
               <button
                 onClick={onNavigateToWarRoom}
-                className="btn btn-primary"
-                style={{ padding: '10px 16px', width: '100%', justifyContent: 'center' }}
+                className="btn-primary"
+                style={{ padding: '8px 16px', width: '100%', justifyContent: 'center', borderRadius: 6 }}
               >
                 <span>View Incident in War Room Map</span>
                 <ArrowRight size={14} />
@@ -292,8 +353,8 @@ export const PublicReportPortal: React.FC<PublicReportPortalProps> = ({
                 setSubmissionResult(null);
                 setRawText('');
               }}
-              className="btn btn-secondary"
-              style={{ padding: '8px 16px', width: '100%', justifyContent: 'center' }}
+              className="btn-secondary"
+              style={{ padding: '8px 16px', width: '100%', justifyContent: 'center', borderRadius: 6 }}
             >
               Report Another Emergency
             </button>
@@ -303,43 +364,43 @@ export const PublicReportPortal: React.FC<PublicReportPortalProps> = ({
         /* Public Reporting Form */
         <form
           onSubmit={handleSubmit}
-          className="vercel-panel"
-          style={{ padding: 14, display: 'flex', flexDirection: 'column', gap: 12 }}
+          style={{ padding: 16, background: '#161b22', border: '1px solid #30363d', borderRadius: 8, display: 'flex', flexDirection: 'column', gap: 14 }}
         >
           {/* Step 1: Emergency Category Selector */}
           <div>
-            <label className="form-label" style={{ color: '#ffffff', fontWeight: 600, fontSize: 12, marginBottom: 6 }}>
+            <label className="form-label" style={{ color: '#f0f6fc', fontWeight: 600, fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.04em', marginBottom: 8 }}>
               1. Select Emergency Type (आपातकाल का प्रकार चुनें)
             </label>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(120px, 1fr))', gap: 6 }}>
               {[
-                { id: 'FLOOD', label: 'Flood / Rain', sub: 'जलभराव / बाढ़', icon: <Droplets size={14} color="#38bdf8" /> },
-                { id: 'FIRE', label: 'Fire / Smoke', sub: 'आग / धुआं', icon: <Flame size={14} color="#f87171" /> },
-                { id: 'EARTHQUAKE', label: 'Earthquake', sub: 'भूकंप / मलबे', icon: <Zap size={14} color="#fbbf24" /> },
-                { id: 'GAS_LEAK', label: 'Gas Leak', sub: 'गैस रिसाव', icon: <AlertTriangle size={14} color="#fb7185" /> },
-                { id: 'MEDICAL', label: 'Medical Trauma', sub: 'चिकित्सा आपातकाल', icon: <Activity size={14} color="#34d399" /> }
+                { id: 'FLOOD', label: 'Flood / Rain', sub: 'जलभराव / बाढ़', icon: <Droplets size={14} color="#58a6ff" /> },
+                { id: 'FIRE', label: 'Fire / Smoke', sub: 'आग / धुआं', icon: <Flame size={14} color="#f85149" /> },
+                { id: 'EARTHQUAKE', label: 'Earthquake', sub: 'भूकंप / मलबे', icon: <Zap size={14} color="#d29922" /> },
+                { id: 'GAS_LEAK', label: 'Gas Leak', sub: 'गैस रिसाव', icon: <AlertTriangle size={14} color="#f85149" /> },
+                { id: 'MEDICAL', label: 'Medical Trauma', sub: 'चिकित्सा आपातकाल', icon: <Activity size={14} color="#3fb950" /> }
               ].map((cat) => (
                 <button
                   type="button"
                   key={cat.id}
                   onClick={() => setCategory(cat.id as any)}
-                  className={`btn ${category === cat.id ? 'btn-secondary' : 'btn-ghost'}`}
                   style={{
                     display: 'flex',
                     flexDirection: 'column',
                     alignItems: 'flex-start',
                     padding: '8px 10px',
                     borderRadius: 6,
-                    border: category === cat.id ? '1px solid #38bdf8' : '1px solid var(--border-subtle)',
-                    background: category === cat.id ? 'rgba(56, 189, 248, 0.1)' : '#111111',
-                    minHeight: 52
+                    border: category === cat.id ? '1px solid #58a6ff' : '1px solid #30363d',
+                    background: category === cat.id ? 'rgba(56, 139, 253, 0.15)' : '#0d1117',
+                    minHeight: 52,
+                    cursor: 'pointer',
+                    transition: 'all 0.15s ease'
                   }}
                 >
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
                     {cat.icon}
-                    <span style={{ fontSize: 11, fontWeight: 700, color: '#ffffff' }}>{cat.label}</span>
+                    <span style={{ fontSize: 11, fontWeight: 600, color: category === cat.id ? '#58a6ff' : '#c9d1d9' }}>{cat.label}</span>
                   </div>
-                  <span style={{ fontSize: 9, color: '#a1a1a1', marginTop: 2 }}>{cat.sub}</span>
+                  <span style={{ fontSize: 10, color: '#8b949e', marginTop: 2 }}>{cat.sub}</span>
                 </button>
               ))}
             </div>
@@ -348,31 +409,31 @@ export const PublicReportPortal: React.FC<PublicReportPortalProps> = ({
           {/* Step 2: Location with One-Tap GPS */}
           <div>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 6, flexWrap: 'wrap', gap: 4 }}>
-              <label className="form-label" style={{ color: '#ffffff', fontWeight: 600, fontSize: 12, margin: 0 }}>
+              <label className="form-label" style={{ color: '#f0f6fc', fontWeight: 600, fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.04em', margin: 0 }}>
                 2. Location (स्थान)
               </label>
               <button
                 type="button"
                 onClick={handleDetectGPS}
                 disabled={isGeolocating}
-                className="btn btn-secondary"
-                style={{ padding: '3px 8px', fontSize: 10, display: 'inline-flex', alignItems: 'center', gap: 4 }}
+                className="btn-secondary"
+                style={{ padding: '3px 8px', fontSize: 11, display: 'inline-flex', alignItems: 'center', gap: 4 }}
               >
-                {isGeolocating ? <Loader2 size={11} className="spin-anim" /> : <Navigation size={11} color="#38bdf8" />}
+                {isGeolocating ? <Loader2 size={11} className="spin-anim" /> : <Navigation size={11} color="#58a6ff" />}
                 <span>{isGeolocating ? 'Detecting GPS...' : 'Use GPS Location'}</span>
               </button>
             </div>
 
             {/* Location Search Input */}
             <div style={{ position: 'relative' }}>
-              <Search size={13} color="#737373" style={{ position: 'absolute', left: 10, top: 11 }} />
+              <Search size={13} color="#8b949e" style={{ position: 'absolute', left: 10, top: 10 }} />
               <input
                 type="text"
                 placeholder="Search landmark, street, colony, or city..."
                 value={searchQuery || reportedAddress}
                 onChange={(e) => handleLocationSearch(e.target.value)}
                 className="form-input"
-                style={{ paddingLeft: 28, fontSize: 11 }}
+                style={{ paddingLeft: 30, fontSize: 12 }}
               />
 
               {searchResults.length > 0 && (
@@ -383,13 +444,13 @@ export const PublicReportPortal: React.FC<PublicReportPortalProps> = ({
                     left: 0,
                     right: 0,
                     zIndex: 25,
-                    background: '#161616',
-                    border: '1px solid var(--border-medium)',
+                    background: '#161b22',
+                    border: '1px solid #30363d',
                     borderRadius: 6,
                     maxHeight: 180,
                     overflowY: 'auto',
                     marginTop: 2,
-                    boxShadow: '0 8px 24px rgba(0,0,0,0.9)'
+                    boxShadow: '0 8px 24px rgba(0,0,0,0.6)'
                   }}
                 >
                   {searchResults.map((item, idx) => (
@@ -398,13 +459,16 @@ export const PublicReportPortal: React.FC<PublicReportPortalProps> = ({
                       onClick={() => handleSelectSearchResult(item)}
                       style={{
                         padding: '8px 12px',
-                        borderBottom: '1px solid rgba(255,255,255,0.05)',
+                        borderBottom: '1px solid #21262d',
                         fontSize: 11,
                         cursor: 'pointer',
-                        color: '#ededed'
+                        color: '#c9d1d9',
+                        transition: 'background 0.15s ease'
                       }}
+                      onMouseEnter={(e) => ((e.target as HTMLElement).style.background = '#21262d')}
+                      onMouseLeave={(e) => ((e.target as HTMLElement).style.background = 'transparent')}
                     >
-                      <MapPin size={11} color="#38bdf8" style={{ display: 'inline', marginRight: 5 }} />
+                      <MapPin size={11} color="#58a6ff" style={{ display: 'inline', marginRight: 5 }} />
                       {item.displayName}
                     </div>
                   ))}
@@ -412,29 +476,78 @@ export const PublicReportPortal: React.FC<PublicReportPortalProps> = ({
               )}
             </div>
 
-            <div style={{ fontSize: 10, color: '#737373', marginTop: 4, fontFamily: 'monospace' }}>
+            <div className="num-tabular" style={{ fontSize: 10, color: '#8b949e', marginTop: 4, fontFamily: 'monospace' }}>
               GPS: {latitude.toFixed(4)}°N, {longitude.toFixed(4)}°E (OSM Verified)
             </div>
           </div>
 
-          {/* Step 3: Situation Description & Quick Templates */}
+          {/* Step 3: Situation Description & Vernacular Voice Assistant */}
           <div>
-            <label className="form-label" style={{ color: '#ffffff', fontWeight: 600, fontSize: 12 }}>
-              3. Describe Situation (विवरण लिखें - Hindi, English or Regional)
-            </label>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 6 }}>
+              <label className="form-label" style={{ color: '#f0f6fc', fontWeight: 600, fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.04em', margin: 0 }}>
+                3. Describe Situation (विवरण लिखें - 12 Indian Languages)
+              </label>
+              <button
+                type="button"
+                onClick={() => setShowVoiceRecorder(!showVoiceRecorder)}
+                className="btn-secondary"
+                style={{
+                  padding: '3px 8px',
+                  fontSize: 11,
+                  fontWeight: 600,
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: 4,
+                  borderColor: showVoiceRecorder ? '#58a6ff' : '#30363d',
+                  color: showVoiceRecorder ? '#58a6ff' : '#c9d1d9'
+                }}
+              >
+                <Mic size={12} color={showVoiceRecorder ? '#58a6ff' : '#8b949e'} />
+                {showVoiceRecorder ? 'Hide Voice Assistant' : 'Speak (Bhashini AI)'}
+              </button>
+            </div>
+
+            {/* Bhashini Voice Recorder Component */}
+            {showVoiceRecorder && (
+              <VoiceRecorderWidget
+                onTranscriptionComplete={handleVoiceTranscription}
+                latitude={latitude}
+                longitude={longitude}
+              />
+            )}
+
             <textarea
               required
               rows={3}
-              placeholder="Explain what is happening (e.g. water level, trapped victims, fire, hazards)..."
+              placeholder="Explain what is happening (e.g. water level, trapped victims, fire, hazards)... Or tap 'Speak (Bhashini AI)' above."
               value={rawText}
               onChange={(e) => setRawText(e.target.value)}
               className="form-input"
               style={{ resize: 'vertical', fontSize: 12, lineHeight: 1.4 }}
             />
 
+            {/* Real-time English EOC Translation preview */}
+            {englishTranslation && (
+              <div
+                style={{
+                  marginTop: 6,
+                  padding: '8px 12px',
+                  background: 'rgba(46, 160, 67, 0.1)',
+                  border: '1px solid rgba(46, 160, 67, 0.3)',
+                  borderRadius: 6,
+                  fontSize: 11,
+                  color: '#3fb950',
+                  lineHeight: 1.4
+                }}
+              >
+                <span style={{ fontWeight: 600, color: '#f0f6fc' }}>EOC English Translation: </span>
+                {englishTranslation}
+              </div>
+            )}
+
             {/* Quick Templates */}
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 4, marginTop: 6 }}>
-              <span style={{ fontSize: 10, color: '#737373' }}>Quick presets (click to insert):</span>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 4, marginTop: 8 }}>
+              <span style={{ fontSize: 10, color: '#8b949e' }}>Quick presets (click to insert):</span>
               <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4 }}>
                 {situationPresets.map((preset, idx) => (
                   <button
@@ -442,15 +555,18 @@ export const PublicReportPortal: React.FC<PublicReportPortalProps> = ({
                     key={idx}
                     onClick={() => setRawText(preset.text)}
                     style={{
-                      padding: '4px 8px',
+                      padding: '3px 8px',
                       fontSize: 10,
-                      background: '#141414',
-                      border: '1px solid var(--border-subtle)',
+                      background: '#0d1117',
+                      border: '1px solid #30363d',
                       borderRadius: 4,
-                      color: '#ededed',
+                      color: '#c9d1d9',
                       cursor: 'pointer',
-                      textAlign: 'left'
+                      textAlign: 'left',
+                      transition: 'border-color 0.15s ease'
                     }}
+                    onMouseEnter={(e) => ((e.target as HTMLElement).style.borderColor = '#58a6ff')}
+                    onMouseLeave={(e) => ((e.target as HTMLElement).style.borderColor = '#30363d')}
                   >
                     {preset.label}
                   </button>
@@ -469,7 +585,7 @@ export const PublicReportPortal: React.FC<PublicReportPortalProps> = ({
                 placeholder="e.g. 5"
                 value={trappedCount}
                 onChange={(e) => setTrappedCount(e.target.value)}
-                className="form-input"
+                className="form-input num-tabular"
                 style={{ fontSize: 12 }}
               />
             </div>
@@ -482,7 +598,7 @@ export const PublicReportPortal: React.FC<PublicReportPortalProps> = ({
                 placeholder="e.g. 2"
                 value={casualtiesCount}
                 onChange={(e) => setCasualtiesCount(e.target.value)}
-                className="form-input"
+                className="form-input num-tabular"
                 style={{ fontSize: 12 }}
               />
             </div>
@@ -495,7 +611,7 @@ export const PublicReportPortal: React.FC<PublicReportPortalProps> = ({
               placeholder="+91 9876543210"
               value={reporterContact}
               onChange={(e) => setReporterContact(e.target.value)}
-              className="form-input"
+              className="form-input num-tabular"
               style={{ fontSize: 12 }}
             />
           </div>
@@ -504,27 +620,27 @@ export const PublicReportPortal: React.FC<PublicReportPortalProps> = ({
           <button
             type="submit"
             disabled={isSubmitting}
-            className="btn btn-danger"
+            className="btn-danger"
             style={{
-              padding: '12px',
-              fontSize: 13,
-              fontWeight: 700,
+              padding: '10px 16px',
+              fontSize: 12,
+              fontWeight: 600,
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
               gap: 8,
               marginTop: 4,
-              minHeight: 46
+              borderRadius: 6
             }}
           >
             {isSubmitting ? (
               <>
-                <Loader2 size={16} className="spin-anim" />
+                <Loader2 size={15} className="spin-anim" />
                 <span>Processing AI Triage & Dispatching...</span>
               </>
             ) : (
               <>
-                <Send size={15} />
+                <Send size={14} />
                 <span>Transmit 112 Emergency Report (आपातकालीन रिपोर्ट भेजें)</span>
               </>
             )}

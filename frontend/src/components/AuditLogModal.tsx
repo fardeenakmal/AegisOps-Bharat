@@ -55,97 +55,108 @@ export const AuditLogModal: React.FC<AuditLogModalProps> = ({ onClose }) => {
       className="modal-overlay"
     >
       <div
-        className="glass-panel modal-content"
+        className="modal-content"
         style={{
           width: '100%',
           maxWidth: 800,
           maxHeight: '90vh',
           display: 'flex',
           flexDirection: 'column',
-          borderRadius: 16,
-          background: '#0f172a',
-          border: '1px solid rgba(255, 255, 255, 0.15)',
+          borderRadius: 12,
+          background: 'var(--bg-card)',
+          border: '1px solid var(--border-default)',
+          boxShadow: '0 24px 48px rgba(0, 0, 0, 0.7)',
           overflow: 'hidden'
         }}
       >
         <div
           style={{
-            padding: '16px 20px',
-            borderBottom: '1px solid rgba(255, 255, 255, 0.1)',
+            padding: '14px 18px',
+            borderBottom: '1px solid var(--border-subtle)',
             display: 'flex',
             alignItems: 'center',
-            justifyContent: 'space-between'
+            justifyContent: 'space-between',
+            background: 'var(--bg-surface)'
           }}
         >
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-            <FileText size={18} color="#06b6d4" />
-            <h3 style={{ fontSize: 16, color: '#f8fafc' }}>AI Decisions & Operator Override Audit Trail</h3>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+            <FileText size={18} color="#38bdf8" />
+            <div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                <h3 style={{ fontSize: 14, fontWeight: 600, color: 'var(--text-primary)', letterSpacing: '-0.01em', margin: 0 }}>
+                  AI Decisions & Operator Override Audit Trail
+                </h3>
+                <span className="badge badge-info" style={{ fontSize: 9, padding: '1px 6px' }}>COMPLIANCE</span>
+              </div>
+              <p style={{ fontSize: 11, color: 'var(--text-muted)', margin: '2px 0 0' }}>Tamper-evident chronological record of automated actions and manual overrides</p>
+            </div>
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
             <button
               onClick={loadLogs}
               disabled={loading}
-              className="btn btn-secondary"
-              style={{ padding: '4px 10px', fontSize: 11 }}
+              className="btn-secondary"
+              style={{ padding: '4px 10px', fontSize: 11, borderRadius: 6, display: 'inline-flex', alignItems: 'center', gap: 6 }}
             >
               <FileText size={12} className={loading ? 'spin-anim' : ''} color="#38bdf8" />
               <span>{loading ? 'Refreshing...' : 'Refresh Logs'}</span>
             </button>
-            <button onClick={onClose} className="btn btn-ghost" style={{ padding: 6 }}>
-              <X size={18} />
+            <button onClick={onClose} className="btn-secondary" style={{ padding: '4px 8px', borderRadius: 6 }}>
+              <X size={16} />
             </button>
           </div>
         </div>
 
-        <div style={{ flex: 1, overflowY: 'auto', padding: 20 }}>
+        <div style={{ flex: 1, overflowY: 'auto', padding: 18 }}>
           {loading ? (
-            <div style={{ padding: 30, textAlign: 'center', color: '#94a3b8' }}>Loading audit logs...</div>
+            <div style={{ padding: 30, textAlign: 'center', color: 'var(--text-muted)', fontSize: 12 }}>Loading audit logs...</div>
           ) : logs.length === 0 ? (
-            <div style={{ padding: 30, textAlign: 'center', color: '#94a3b8' }}>No audit events recorded yet.</div>
+            <div style={{ padding: 30, textAlign: 'center', color: 'var(--text-muted)', fontSize: 12 }}>No audit events recorded yet.</div>
           ) : (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
               {logs.map((log) => {
                 const isAI = log.actorType === 'AI_PIPELINE';
                 return (
                   <div
                     key={log.id}
-                    className="glass-panel"
                     style={{
-                      padding: 14,
-                      background: isAI ? 'rgba(15, 23, 42, 0.7)' : 'rgba(30, 41, 59, 0.7)',
-                      borderLeft: isAI ? '3px solid #06b6d4' : '3px solid #f59e0b'
+                      padding: 12,
+                      background: 'var(--bg-surface)',
+                      border: '1px solid var(--border-default)',
+                      borderLeft: isAI ? '3px solid #38bdf8' : '3px solid #d29922',
+                      borderRadius: 6
                     }}
                   >
-                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 6 }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 6, alignItems: 'center' }}>
                       <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                        {isAI ? <Bot size={15} color="#06b6d4" /> : <User size={15} color="#f59e0b" />}
-                        <span style={{ fontWeight: 700, fontSize: 13, color: '#f8fafc' }}>
+                        {isAI ? <Bot size={14} color="#38bdf8" /> : <User size={14} color="#d29922" />}
+                        <span style={{ fontWeight: 600, fontSize: 12, color: 'var(--text-primary)' }}>
                           {log.action}
                         </span>
-                        <span className={`badge ${isAI ? 'badge-cyan' : 'badge-medium'}`} style={{ fontSize: 9 }}>
+                        <span className={`badge ${isAI ? 'badge-info' : 'badge-medium'}`} style={{ fontSize: 9 }}>
                           {log.actorType}
                         </span>
                       </div>
-                      <span style={{ fontSize: 11, color: '#64748b' }}>
+                      <span className="num-tabular" style={{ fontSize: 11, color: 'var(--text-muted)' }}>
                         {new Date(log.timestamp).toLocaleTimeString()}
                       </span>
                     </div>
 
-                    <div style={{ fontSize: 12, color: '#cbd5e1', marginBottom: 4 }}>
-                      Actor: <b>{log.actorName || log.actorId}</b>
+                    <div style={{ fontSize: 11, color: 'var(--text-muted)', marginBottom: 4 }}>
+                      Actor: <b style={{ color: 'var(--text-primary)' }}>{log.actorName || log.actorId}</b>
                       {log.modelName && (
-                        <span> • Model: <code style={{ color: '#67e8f9' }}>{log.modelName} (v{log.modelVersion})</code></span>
+                        <span> • Model: <code style={{ color: '#38bdf8', fontSize: 11 }}>{log.modelName} (v{log.modelVersion})</code></span>
                       )}
                     </div>
 
                     {log.overrideReason && (
-                      <div style={{ fontSize: 12, color: '#fde68a', background: 'rgba(245, 158, 11, 0.1)', padding: 8, borderRadius: 6, marginTop: 6 }}>
+                      <div style={{ fontSize: 11, color: '#e3b341', background: 'rgba(210, 153, 34, 0.1)', border: '1px solid rgba(210, 153, 34, 0.3)', padding: '6px 10px', borderRadius: 4, marginTop: 6 }}>
                         <b>Override Justification:</b> "{log.overrideReason}"
                       </div>
                     )}
 
                     {log.newValue && (
-                      <div style={{ fontSize: 11, color: '#94a3b8', marginTop: 6, fontFamily: 'monospace', background: 'rgba(0,0,0,0.3)', padding: 6, borderRadius: 4 }}>
+                      <div className="num-tabular" style={{ fontSize: 10, color: 'var(--text-muted)', marginTop: 6, fontFamily: 'monospace', background: 'var(--bg-card)', border: '1px solid var(--border-subtle)', padding: '6px 8px', borderRadius: 4, overflowX: 'auto' }}>
                         Payload: {JSON.stringify(log.newValue)}
                       </div>
                     )}

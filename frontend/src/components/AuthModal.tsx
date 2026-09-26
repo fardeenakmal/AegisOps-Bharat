@@ -92,7 +92,6 @@ export const AuthModal: React.FC<AuthModalProps> = ({
 
       localStorage.setItem('aegisops_jwt', data.token);
       onLoginSuccess(data.user, data.token);
-      alert(`Welcome ${data.user.fullName}! Your Citizen account has been registered.`);
       onClose();
     } catch (err: any) {
       setRegError(err.message || 'Registration failed. Please try again.');
@@ -142,34 +141,36 @@ export const AuthModal: React.FC<AuthModalProps> = ({
       className="modal-overlay"
     >
       <div
-        className="vercel-panel modal-content"
+        className="modal-content"
         style={{
           width: '100%',
           maxWidth: 480,
           maxHeight: '94vh',
           display: 'flex',
           flexDirection: 'column',
-          background: '#0a0a0a',
-          border: '1px solid var(--border-medium)',
+          background: 'var(--bg-card)',
+          border: '1px solid var(--border-default)',
+          borderRadius: 12,
+          boxShadow: '0 24px 48px rgba(0, 0, 0, 0.7)',
           overflow: 'hidden'
         }}
       >
         {/* Modal Header */}
         <div
           style={{
-            padding: '12px 16px',
+            padding: '14px 18px',
             borderBottom: '1px solid var(--border-subtle)',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'space-between',
-            background: '#111111'
+            background: 'var(--bg-surface)'
           }}
         >
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
             <div
               style={{
-                width: 28,
-                height: 28,
+                width: 30,
+                height: 30,
                 borderRadius: 6,
                 background: 'rgba(56, 189, 248, 0.15)',
                 border: '1px solid rgba(56, 189, 248, 0.3)',
@@ -181,16 +182,19 @@ export const AuthModal: React.FC<AuthModalProps> = ({
               <Lock size={14} color="#38bdf8" />
             </div>
             <div>
-              <h3 style={{ fontSize: 13, fontWeight: 700, color: '#ffffff', margin: 0 }}>
-                AegisOps Authentication
-              </h3>
-              <p style={{ fontSize: 10, color: '#737373', margin: 0 }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                <h3 style={{ fontSize: 14, fontWeight: 600, color: 'var(--text-primary)', letterSpacing: '-0.01em', margin: 0 }}>
+                  AegisOps Authentication
+                </h3>
+                <span className="badge badge-info" style={{ fontSize: 9, padding: '1px 6px' }}>SECURE SSO</span>
+              </div>
+              <p style={{ fontSize: 11, color: 'var(--text-muted)', margin: '2px 0 0' }}>
                 Administrator & Citizen Secure Portal
               </p>
             </div>
           </div>
 
-          <button onClick={onClose} className="btn btn-ghost" style={{ padding: 4 }}>
+          <button onClick={onClose} className="btn-secondary" style={{ padding: '4px 8px', borderRadius: 6 }}>
             <X size={16} />
           </button>
         </div>
@@ -199,8 +203,8 @@ export const AuthModal: React.FC<AuthModalProps> = ({
         {!isGuest && currentUser && (
           <div
             style={{
-              padding: '8px 14px',
-              background: 'rgba(56, 189, 248, 0.08)',
+              padding: '8px 16px',
+              background: 'var(--bg-surface)',
               borderBottom: '1px solid var(--border-subtle)',
               display: 'flex',
               alignItems: 'center',
@@ -209,16 +213,16 @@ export const AuthModal: React.FC<AuthModalProps> = ({
             }}
           >
             <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-              <span style={{ color: '#737373' }}>Logged in as:</span>
-              <span style={{ color: '#ffffff', fontWeight: 700 }}>{currentUser.fullName}</span>
-              <span className={`badge ${currentUser.role === 'NATIONAL_COMMANDER' ? 'badge-critical' : 'badge-cyan'}`} style={{ fontSize: 9, padding: '1px 6px' }}>
+              <span style={{ color: 'var(--text-muted)' }}>Logged in as:</span>
+              <span style={{ color: 'var(--text-primary)', fontWeight: 600 }}>{currentUser.fullName}</span>
+              <span className={`badge ${currentUser.role === 'NATIONAL_COMMANDER' ? 'badge-critical' : 'badge-info'}`} style={{ fontSize: 9, padding: '1px 6px' }}>
                 {currentUser.role === 'NATIONAL_COMMANDER' ? 'ADMIN' : 'CITIZEN'}
               </span>
             </div>
             <button
               onClick={handleSignOut}
-              className="btn btn-ghost"
-              style={{ fontSize: 10, padding: '2px 6px', color: '#f87171' }}
+              className="btn-secondary"
+              style={{ fontSize: 10, padding: '2px 8px', color: '#f85149', borderRadius: 4, display: 'inline-flex', alignItems: 'center', gap: 4 }}
               title="Sign Out"
             >
               <LogOut size={11} />
@@ -228,19 +232,33 @@ export const AuthModal: React.FC<AuthModalProps> = ({
         )}
 
         {/* Segmented Tab Switcher */}
-        <div style={{ padding: '8px 12px 0', background: '#0a0a0a' }}>
-          <div className="segmented-control" style={{ width: '100%' }}>
+        <div style={{ padding: '10px 16px 0', background: 'var(--bg-card)' }}>
+          <div className="segmented-control" style={{ width: '100%', background: 'var(--bg-surface)', border: '1px solid var(--border-default)', borderRadius: 6, padding: 2 }}>
             <button
               onClick={() => setActiveTab('signin')}
               className={`segmented-btn ${activeTab === 'signin' ? 'active' : ''}`}
-              style={{ fontSize: 11, padding: '7px 8px' }}
+              style={{
+                fontSize: 11,
+                padding: '6px 10px',
+                borderRadius: 4,
+                background: activeTab === 'signin' ? 'var(--bg-card)' : 'transparent',
+                color: activeTab === 'signin' ? 'var(--text-primary)' : 'var(--text-muted)',
+                fontWeight: activeTab === 'signin' ? 600 : 400
+              }}
             >
               🔑 Sign In (लॉग इन)
             </button>
             <button
               onClick={() => setActiveTab('register')}
               className={`segmented-btn ${activeTab === 'register' ? 'active' : ''}`}
-              style={{ fontSize: 11, padding: '7px 8px' }}
+              style={{
+                fontSize: 11,
+                padding: '6px 10px',
+                borderRadius: 4,
+                background: activeTab === 'register' ? 'var(--bg-card)' : 'transparent',
+                color: activeTab === 'register' ? 'var(--text-primary)' : 'var(--text-muted)',
+                fontWeight: activeTab === 'register' ? 600 : 400
+              }}
             >
               📝 Citizen Registration (नागरिक पंजीकरण)
             </button>
@@ -256,25 +274,25 @@ export const AuthModal: React.FC<AuthModalProps> = ({
                 <div
                   style={{
                     padding: '8px 12px',
-                    background: 'rgba(239, 68, 68, 0.15)',
-                    border: '1px solid rgba(239, 68, 68, 0.3)',
+                    background: 'rgba(248, 81, 73, 0.1)',
+                    border: '1px solid rgba(248, 81, 73, 0.4)',
                     borderRadius: 6,
                     fontSize: 11,
-                    color: '#fca5a5',
+                    color: '#f85149',
                     display: 'flex',
                     alignItems: 'center',
                     gap: 6
                   }}
                 >
-                  <AlertTriangle size={13} color="#f87171" />
+                  <AlertTriangle size={13} color="#f85149" />
                   <span>{signInError}</span>
                 </div>
               )}
 
               <div>
-                <label className="form-label" style={{ fontSize: 11 }}>Email or Username (ईमेल / उपयोगकर्ता नाम)</label>
+                <label className="form-label" style={{ fontSize: 11, color: 'var(--text-primary)' }}>Email or Username (ईमेल / उपयोगकर्ता नाम)</label>
                 <div style={{ position: 'relative' }}>
-                  <User size={14} color="#737373" style={{ position: 'absolute', left: 10, top: 10 }} />
+                  <User size={14} color="var(--text-muted)" style={{ position: 'absolute', left: 10, top: 10 }} />
                   <input
                     type="text"
                     required
@@ -288,9 +306,9 @@ export const AuthModal: React.FC<AuthModalProps> = ({
               </div>
 
               <div>
-                <label className="form-label" style={{ fontSize: 11 }}>Password (पासवर्ड)</label>
+                <label className="form-label" style={{ fontSize: 11, color: 'var(--text-primary)' }}>Password (पासवर्ड)</label>
                 <div style={{ position: 'relative' }}>
-                  <Key size={14} color="#737373" style={{ position: 'absolute', left: 10, top: 10 }} />
+                  <Key size={14} color="var(--text-muted)" style={{ position: 'absolute', left: 10, top: 10 }} />
                   <input
                     type="password"
                     required
@@ -306,9 +324,9 @@ export const AuthModal: React.FC<AuthModalProps> = ({
               {/* Admin Shortcut Helper */}
               <div
                 style={{
-                  padding: '8px 10px',
-                  background: 'rgba(255, 255, 255, 0.03)',
-                  border: '1px solid var(--border-subtle)',
+                  padding: '8px 12px',
+                  background: 'var(--bg-surface)',
+                  border: '1px solid var(--border-default)',
                   borderRadius: 6,
                   display: 'flex',
                   alignItems: 'center',
@@ -318,13 +336,13 @@ export const AuthModal: React.FC<AuthModalProps> = ({
               >
                 <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
                   <Shield size={13} color="#38bdf8" />
-                  <span style={{ color: '#a1a1a1' }}>System Administrator:</span>
+                  <span style={{ color: 'var(--text-muted)' }}>System Administrator:</span>
                 </div>
                 <button
                   type="button"
                   onClick={handleAdminPrefill}
-                  className="btn btn-ghost"
-                  style={{ fontSize: 10, padding: '2px 6px', color: '#38bdf8' }}
+                  className="btn-secondary"
+                  style={{ fontSize: 10, padding: '2px 8px', color: '#38bdf8', borderRadius: 4 }}
                 >
                   Fill Admin Credentials
                 </button>
@@ -333,16 +351,17 @@ export const AuthModal: React.FC<AuthModalProps> = ({
               <button
                 type="submit"
                 disabled={isSigningIn}
-                className="btn btn-primary"
+                className="btn-primary"
                 style={{
-                  padding: 10,
-                  fontSize: 13,
-                  fontWeight: 700,
+                  padding: '10px 16px',
+                  fontSize: 12,
+                  fontWeight: 600,
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
                   gap: 6,
-                  marginTop: 2
+                  marginTop: 2,
+                  borderRadius: 6
                 }}
               >
                 {isSigningIn ? (
@@ -358,7 +377,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
                 )}
               </button>
 
-              <div style={{ textAlign: 'center', fontSize: 11, color: '#737373', marginTop: 2 }}>
+              <div style={{ textAlign: 'center', fontSize: 11, color: 'var(--text-muted)', marginTop: 2 }}>
                 Public citizen?{' '}
                 <button
                   type="button"
@@ -378,25 +397,25 @@ export const AuthModal: React.FC<AuthModalProps> = ({
                 <div
                   style={{
                     padding: '8px 12px',
-                    background: 'rgba(239, 68, 68, 0.15)',
-                    border: '1px solid rgba(239, 68, 68, 0.3)',
+                    background: 'rgba(248, 81, 73, 0.1)',
+                    border: '1px solid rgba(248, 81, 73, 0.4)',
                     borderRadius: 6,
                     fontSize: 11,
-                    color: '#fca5a5',
+                    color: '#f85149',
                     display: 'flex',
                     alignItems: 'center',
                     gap: 6
                   }}
                 >
-                  <AlertTriangle size={13} color="#f87171" />
+                  <AlertTriangle size={13} color="#f85149" />
                   <span>{regError}</span>
                 </div>
               )}
 
               <div>
-                <label className="form-label" style={{ fontSize: 11 }}>Full Name (पूरा नाम) *</label>
+                <label className="form-label" style={{ fontSize: 11, color: 'var(--text-primary)' }}>Full Name (पूरा नाम) *</label>
                 <div style={{ position: 'relative' }}>
-                  <User size={13} color="#737373" style={{ position: 'absolute', left: 10, top: 10 }} />
+                  <User size={13} color="var(--text-muted)" style={{ position: 'absolute', left: 10, top: 10 }} />
                   <input
                     type="text"
                     required
@@ -411,22 +430,22 @@ export const AuthModal: React.FC<AuthModalProps> = ({
 
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
                 <div>
-                  <label className="form-label" style={{ fontSize: 11 }}>Mobile Phone (फोन नंबर)</label>
+                  <label className="form-label" style={{ fontSize: 11, color: 'var(--text-primary)' }}>Mobile Phone (फोन नंबर)</label>
                   <div style={{ position: 'relative' }}>
-                    <Phone size={13} color="#737373" style={{ position: 'absolute', left: 10, top: 10 }} />
+                    <Phone size={13} color="var(--text-muted)" style={{ position: 'absolute', left: 10, top: 10 }} />
                     <input
                       type="tel"
                       placeholder="+91 9876543210"
                       value={regPhone}
                       onChange={(e) => setRegPhone(e.target.value)}
-                      className="form-input"
+                      className="form-input num-tabular"
                       style={{ paddingLeft: 30, fontSize: 11 }}
                     />
                   </div>
                 </div>
 
                 <div>
-                  <label className="form-label" style={{ fontSize: 11 }}>City / State</label>
+                  <label className="form-label" style={{ fontSize: 11, color: 'var(--text-primary)' }}>City / State</label>
                   <select
                     value={regZoneId}
                     onChange={(e) => setRegZoneId(e.target.value)}
@@ -445,9 +464,9 @@ export const AuthModal: React.FC<AuthModalProps> = ({
               </div>
 
               <div>
-                <label className="form-label" style={{ fontSize: 11 }}>Email Address (ईमेल)</label>
+                <label className="form-label" style={{ fontSize: 11, color: 'var(--text-primary)' }}>Email Address (ईमेल)</label>
                 <div style={{ position: 'relative' }}>
-                  <Mail size={13} color="#737373" style={{ position: 'absolute', left: 10, top: 10 }} />
+                  <Mail size={13} color="var(--text-muted)" style={{ position: 'absolute', left: 10, top: 10 }} />
                   <input
                     type="email"
                     placeholder="name@example.com"
@@ -460,9 +479,9 @@ export const AuthModal: React.FC<AuthModalProps> = ({
               </div>
 
               <div>
-                <label className="form-label" style={{ fontSize: 11 }}>Create Password (पासवर्ड)</label>
+                <label className="form-label" style={{ fontSize: 11, color: 'var(--text-primary)' }}>Create Password (पासवर्ड)</label>
                 <div style={{ position: 'relative' }}>
-                  <Key size={13} color="#737373" style={{ position: 'absolute', left: 10, top: 10 }} />
+                  <Key size={13} color="var(--text-muted)" style={{ position: 'absolute', left: 10, top: 10 }} />
                   <input
                     type="password"
                     placeholder="Create a secure password"
@@ -477,16 +496,17 @@ export const AuthModal: React.FC<AuthModalProps> = ({
               <button
                 type="submit"
                 disabled={isRegistering}
-                className="btn btn-danger"
+                className="btn-primary"
                 style={{
-                  padding: 10,
-                  fontSize: 13,
-                  fontWeight: 700,
+                  padding: '10px 16px',
+                  fontSize: 12,
+                  fontWeight: 600,
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
                   gap: 6,
-                  marginTop: 2
+                  marginTop: 4,
+                  borderRadius: 6
                 }}
               >
                 {isRegistering ? (

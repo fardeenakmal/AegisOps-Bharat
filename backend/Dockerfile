@@ -1,17 +1,14 @@
-FROM node:22-alpine AS builder
-
+# Multi-stage Dockerfile for AegisOps Spring Boot Backend
+FROM maven:3.9.9-eclipse-temurin-21 AS build
 WORKDIR /app
-COPY package*.json tsconfig.json ./
-RUN npm ci
-COPY src/ ./src/
-RUN npm run build
+COPY pom.xml .
+RUN mvn dependency:go-offline -B
+COPY src ./src
+RUN mvn clean package -DskipTests
 
-FROM node:22-alpine AS runner
+FROM eclipse-temurin:21-jre-alpine
 WORKDIR /app
-ENV NODE_ENV=production
-COPY package*.json ./
-RUN npm ci --only=production
-COPY --from=builder /app/dist ./dist
-
+COPY --from=build /app/target/*.jar app.jar
 EXPOSE 4000
-CMD ["node", "dist/index.js"]
+ENTRYPOINT ["java", "-jar", "app.jar"]
+

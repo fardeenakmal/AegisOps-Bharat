@@ -1,0 +1,9 @@
+server:
+  port: ${SERVER_PORT_SSL:8443}
+  ssl:
+    enabled: true
+    key-store-type: PKCS12
+    key-store: classpath:certs/keystore.p12
+    key-store-password: aegisops-secure-cert-2026
+    key-alias: aegisops
+
