@@ -163,5 +163,27 @@ public class CoordinationService {
 
         return saved;
     }
+
+    @Transactional
+    public ResponseTeamEntity updateTeamDirect(String teamId, TeamStatus status, Double latitude, Double longitude, String notes) {
+        ResponseTeamEntity team = teamRepository.findById(teamId)
+                .orElseThrow(() -> new IllegalArgumentException("Team not found: " + teamId));
+
+        if (status != null) {
+            team.setStatus(status);
+        }
+        if (latitude != null) {
+            team.setLatitude(BigDecimal.valueOf(latitude));
+        }
+        if (longitude != null) {
+            team.setLongitude(BigDecimal.valueOf(longitude));
+        }
+        team.setLastPingAt(Instant.now());
+        team.setUpdatedAt(Instant.now());
+
+        ResponseTeamEntity saved = teamRepository.save(team);
+        broadcastService.broadcastTeamStatus(saved, null);
+        return saved;
+    }
 }
 

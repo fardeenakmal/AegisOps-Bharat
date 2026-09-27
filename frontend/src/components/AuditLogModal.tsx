@@ -55,32 +55,29 @@ export const AuditLogModal: React.FC<AuditLogModalProps> = ({ onClose }) => {
       className="modal-overlay"
     >
       <div
-        className="modal-content"
+        className="modal-card modal-content"
         style={{
           width: '100%',
           maxWidth: 800,
           maxHeight: '90vh',
           display: 'flex',
           flexDirection: 'column',
-          borderRadius: 12,
-          background: 'var(--bg-card)',
-          border: '1px solid var(--border-default)',
-          boxShadow: '0 24px 48px rgba(0, 0, 0, 0.7)',
           overflow: 'hidden'
         }}
       >
         <div
           style={{
             padding: '14px 18px',
-            borderBottom: '1px solid var(--border-subtle)',
+            borderBottom: '1px solid var(--glass-border)',
             display: 'flex',
             alignItems: 'center',
-            justifyContent: 'space-between',
-            background: 'var(--bg-surface)'
+            justifyContent: 'space-between'
           }}
         >
           <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-            <FileText size={18} color="#38bdf8" />
+            <div className="glass-icon-box md" style={{ color: '#38bdf8' }}>
+              <FileText size={16} />
+            </div>
             <div>
               <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                 <h3 style={{ fontSize: 14, fontWeight: 600, color: 'var(--text-primary)', letterSpacing: '-0.01em', margin: 0 }}>
@@ -95,13 +92,13 @@ export const AuditLogModal: React.FC<AuditLogModalProps> = ({ onClose }) => {
             <button
               onClick={loadLogs}
               disabled={loading}
-              className="btn-secondary"
+              className="btn btn-secondary"
               style={{ padding: '4px 10px', fontSize: 11, borderRadius: 6, display: 'inline-flex', alignItems: 'center', gap: 6 }}
             >
               <FileText size={12} className={loading ? 'spin-anim' : ''} color="#38bdf8" />
               <span>{loading ? 'Refreshing...' : 'Refresh Logs'}</span>
             </button>
-            <button onClick={onClose} className="btn-secondary" style={{ padding: '4px 8px', borderRadius: 6 }}>
+            <button onClick={onClose} className="btn btn-secondary" style={{ padding: '4px 8px', borderRadius: 6 }}>
               <X size={16} />
             </button>
           </div>

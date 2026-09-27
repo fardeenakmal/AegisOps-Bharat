@@ -247,17 +247,13 @@ export const PredictionSimulationModal: React.FC<PredictionSimulationModalProps>
       className="modal-overlay"
     >
       <div
-        className="modal-content"
+        className="modal-card modal-content"
         style={{
           width: '100%',
           maxWidth: 720,
           maxHeight: '92vh',
           display: 'flex',
           flexDirection: 'column',
-          borderRadius: 14,
-          background: 'var(--bg-card)',
-          border: '1px solid var(--border-default)',
-          boxShadow: '0 24px 60px rgba(0, 0, 0, 0.85)',
           overflow: 'hidden'
         }}
       >
@@ -265,27 +261,15 @@ export const PredictionSimulationModal: React.FC<PredictionSimulationModalProps>
         <div
           style={{
             padding: '14px 18px',
-            borderBottom: '1px solid var(--border-subtle)',
+            borderBottom: '1px solid var(--glass-border)',
             display: 'flex',
             alignItems: 'center',
-            justifyContent: 'space-between',
-            background: 'var(--bg-surface)'
+            justifyContent: 'space-between'
           }}
         >
           <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-            <div
-              style={{
-                width: 28,
-                height: 28,
-                borderRadius: 6,
-                background: 'rgba(255, 153, 51, 0.15)',
-                border: '1px solid var(--tiranga-saffron)',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center'
-              }}
-            >
-              <Sparkles size={16} color="var(--tiranga-saffron)" />
+            <div className="glass-icon-box md" style={{ color: 'var(--tiranga-saffron)' }}>
+              <Sparkles size={16} />
             </div>
             <div>
               <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
@@ -301,7 +285,7 @@ export const PredictionSimulationModal: React.FC<PredictionSimulationModalProps>
               </div>
             </div>
           </div>
-          <button onClick={onClose} className="btn-secondary" style={{ padding: '4px 8px', borderRadius: 6 }}>
+          <button onClick={onClose} className="btn btn-secondary" style={{ padding: '4px 8px', borderRadius: 6 }}>
             <X size={16} />
           </button>
         </div>
@@ -311,13 +295,15 @@ export const PredictionSimulationModal: React.FC<PredictionSimulationModalProps>
           style={{
             display: 'flex',
             alignItems: 'center',
+            justifyContent: 'space-between',
             padding: '8px 16px',
-            gap: 10,
+            gap: 8,
+            flexWrap: 'wrap',
             background: 'var(--bg-canvas)',
             borderBottom: '1px solid var(--border-subtle)'
           }}
         >
-          <div className="segmented-control" style={{ width: '100%', maxWidth: 380 }}>
+          <div className="segmented-control" style={{ flex: '1 1 auto', minWidth: 260, maxWidth: 380 }}>
             <button
               onClick={() => setActiveTab('presets')}
               className={`segmented-btn ${activeTab === 'presets' ? 'active' : ''}`}
@@ -334,12 +320,12 @@ export const PredictionSimulationModal: React.FC<PredictionSimulationModalProps>
             </button>
           </div>
 
-          <div style={{ marginLeft: 'auto', display: 'flex', gap: 6 }}>
+          <div style={{ display: 'flex', gap: 6, flexShrink: 0 }}>
             <button
               onClick={handleClearSimulation}
               disabled={clearing}
               className="btn btn-secondary"
-              style={{ fontSize: 11, padding: '4px 10px', height: 28, color: '#f87171', borderColor: 'rgba(239, 68, 68, 0.4)' }}
+              style={{ fontSize: 11, padding: '4px 10px', height: 28, color: '#f87171', borderColor: 'rgba(239, 68, 68, 0.4)', flexShrink: 0 }}
               title="Purge all simulated drill alerts and distress requests"
             >
               <Trash2 size={12} />
@@ -501,7 +487,7 @@ export const PredictionSimulationModal: React.FC<PredictionSimulationModalProps>
                 Select a calibrated high-consequence civil defense drill to inject multi-tier emergency scenarios across Indian disaster sectors:
               </div>
 
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(310px, 1fr))', gap: 10 }}>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(270px, 1fr))', gap: 10 }}>
                 {PRESETS.map((preset) => (
                   <div
                     key={preset.id}
@@ -569,7 +555,7 @@ export const PredictionSimulationModal: React.FC<PredictionSimulationModalProps>
                 <button
                   onClick={handleRunSimulation}
                   disabled={simulating}
-                  className="btn-primary"
+                  className="btn btn-primary"
                   style={{
                     padding: '11px 16px',
                     fontSize: 13,
@@ -781,7 +767,7 @@ export const PredictionSimulationModal: React.FC<PredictionSimulationModalProps>
               <button
                 onClick={handleRunSimulation}
                 disabled={simulating}
-                className="btn-primary"
+                className="btn btn-primary"
                 style={{
                   padding: '11px 16px',
                   fontSize: 13,

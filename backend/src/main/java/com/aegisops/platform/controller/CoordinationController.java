@@ -77,21 +77,35 @@ public class CoordinationController {
         }
     }
 
-    // Update team / responder status
-    @PatchMapping({"/teams/{id}/status", "/resources/{id}/status"})
+    // Update team / responder status or live GPS coordinates
+    @PatchMapping({"/teams/{id}/status", "/resources/{id}/status", "/teams/{id}", "/resources/{id}"})
     public ResponseEntity<?> updateStatus(@PathVariable String id, @RequestBody Map<String, Object> body) {
         try {
             String dispatchId = (String) body.get("dispatchId");
             String statusStr = (String) body.get("status");
             String notes = (String) body.get("notes");
+            Double latitude = body.get("latitude") != null ? ((Number) body.get("latitude")).doubleValue() : null;
+            Double longitude = body.get("longitude") != null ? ((Number) body.get("longitude")).doubleValue() : null;
 
-            if (dispatchId != null && !dispatchId.isBlank()) {
+            if (dispatchId != null && !dispatchId.isBlank() && statusStr != null) {
                 AssignmentStatus status = AssignmentStatus.valueOf(statusStr.toUpperCase());
                 AssignmentEntity updated = coordinationService.updateAssignmentStatus(dispatchId, status, notes);
                 return ResponseEntity.ok(updated);
             }
 
-            return ResponseEntity.ok(Map.of("status", "SUCCESS", "unitId", id));
+            TeamStatus teamStatus = null;
+            if (statusStr != null && !statusStr.isBlank()) {
+                try {
+                    teamStatus = TeamStatus.valueOf(statusStr.toUpperCase());
+                } catch (Exception ignored) {}
+            }
+
+            ResponseTeamEntity updatedTeam = coordinationService.updateTeamDirect(id, teamStatus, latitude, longitude, notes);
+            return ResponseEntity.ok(Map.of(
+                    "status", "SUCCESS",
+                    "unitId", id,
+                    "team", updatedTeam
+            ));
         } catch (Exception ex) {
             return ResponseEntity.badRequest().body(Map.of("error", ex.getMessage()));
         }

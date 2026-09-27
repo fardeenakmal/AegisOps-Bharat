@@ -137,32 +137,18 @@ export const ResponderView: React.FC<ResponderViewProps> = ({
       )}
       {/* Unit Selector Header */}
       <div
+        className="vercel-card"
         style={{
           padding: '12px 16px',
           display: 'flex',
           flexDirection: 'column',
-          gap: 10,
-          background: 'var(--bg-card)',
-          border: '1px solid var(--border-default)',
-          borderRadius: 8
+          gap: 10
         }}
       >
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-            <div
-              style={{
-                width: 32,
-                height: 32,
-                borderRadius: 6,
-                background: 'rgba(56, 139, 253, 0.15)',
-                border: '1px solid rgba(56, 139, 253, 0.3)',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                flexShrink: 0
-              }}
-            >
-              <Truck size={16} color="#38bdf8" />
+            <div className="glass-icon-box md" style={{ color: '#38bdf8' }}>
+              <Truck size={16} />
             </div>
             <div>
               <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
@@ -178,7 +164,7 @@ export const ResponderView: React.FC<ResponderViewProps> = ({
           <button
             onClick={onStatusUpdated}
             disabled={updating}
-            className="btn-secondary"
+            className="btn btn-secondary"
             style={{ padding: '4px 10px', fontSize: 11, borderRadius: 6, display: 'inline-flex', alignItems: 'center', gap: 6 }}
             title="Refresh Field Units"
           >
@@ -203,7 +189,7 @@ export const ResponderView: React.FC<ResponderViewProps> = ({
       </div>
 
       {currentUnit && (
-        <div style={{ padding: '16px', background: 'var(--bg-card)', border: '1px solid var(--border-default)', borderRadius: 8, display: 'flex', flexDirection: 'column', gap: 14 }}>
+        <div className="vercel-card" style={{ padding: '16px', display: 'flex', flexDirection: 'column', gap: 14 }}>
           {/* Unit Status Header */}
           <div
             style={{
@@ -365,7 +351,7 @@ export const ResponderView: React.FC<ResponderViewProps> = ({
               <button
                 onClick={() => handleStatusChange('DISPATCHED')}
                 disabled={updating}
-                className="btn-secondary"
+                className="btn btn-secondary"
                 style={{
                   padding: '10px 6px',
                   fontSize: 11,
@@ -381,7 +367,7 @@ export const ResponderView: React.FC<ResponderViewProps> = ({
               <button
                 onClick={() => handleStatusChange('ON_SCENE')}
                 disabled={updating}
-                className="btn-secondary"
+                className="btn btn-secondary"
                 style={{
                   padding: '10px 6px',
                   fontSize: 11,
@@ -397,7 +383,7 @@ export const ResponderView: React.FC<ResponderViewProps> = ({
               <button
                 onClick={() => handleStatusChange('AVAILABLE')}
                 disabled={updating}
-                className="btn-primary"
+                className="btn btn-primary"
                 style={{ padding: '10px 6px', fontSize: 11, borderRadius: 6 }}
               >
                 ✅ Ready / Clear

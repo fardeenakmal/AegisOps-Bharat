@@ -141,17 +141,13 @@ export const AuthModal: React.FC<AuthModalProps> = ({
       className="modal-overlay"
     >
       <div
-        className="modal-content"
+        className="modal-card modal-content"
         style={{
           width: '100%',
           maxWidth: 480,
           maxHeight: '94vh',
           display: 'flex',
           flexDirection: 'column',
-          background: 'var(--bg-card)',
-          border: '1px solid var(--border-default)',
-          borderRadius: 12,
-          boxShadow: '0 24px 48px rgba(0, 0, 0, 0.7)',
           overflow: 'hidden'
         }}
       >
@@ -159,27 +155,15 @@ export const AuthModal: React.FC<AuthModalProps> = ({
         <div
           style={{
             padding: '14px 18px',
-            borderBottom: '1px solid var(--border-subtle)',
+            borderBottom: '1px solid var(--glass-border)',
             display: 'flex',
             alignItems: 'center',
-            justifyContent: 'space-between',
-            background: 'var(--bg-surface)'
+            justifyContent: 'space-between'
           }}
         >
           <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-            <div
-              style={{
-                width: 30,
-                height: 30,
-                borderRadius: 6,
-                background: 'rgba(56, 189, 248, 0.15)',
-                border: '1px solid rgba(56, 189, 248, 0.3)',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center'
-              }}
-            >
-              <Lock size={14} color="#38bdf8" />
+            <div className="glass-icon-box md" style={{ color: '#38bdf8' }}>
+              <Lock size={15} />
             </div>
             <div>
               <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
@@ -194,7 +178,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
             </div>
           </div>
 
-          <button onClick={onClose} className="btn-secondary" style={{ padding: '4px 8px', borderRadius: 6 }}>
+          <button onClick={onClose} className="btn btn-secondary" style={{ padding: '4px 8px', borderRadius: 6 }}>
             <X size={16} />
           </button>
         </div>
@@ -204,8 +188,8 @@ export const AuthModal: React.FC<AuthModalProps> = ({
           <div
             style={{
               padding: '8px 16px',
-              background: 'var(--bg-surface)',
-              borderBottom: '1px solid var(--border-subtle)',
+              background: 'var(--glass-bg-subtle)',
+              borderBottom: '1px solid var(--glass-border)',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'space-between',
@@ -221,7 +205,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
             </div>
             <button
               onClick={handleSignOut}
-              className="btn-secondary"
+              className="btn btn-secondary"
               style={{ fontSize: 10, padding: '2px 8px', color: '#f85149', borderRadius: 4, display: 'inline-flex', alignItems: 'center', gap: 4 }}
               title="Sign Out"
             >
@@ -341,7 +325,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
                 <button
                   type="button"
                   onClick={handleAdminPrefill}
-                  className="btn-secondary"
+                  className="btn btn-secondary"
                   style={{ fontSize: 10, padding: '2px 8px', color: '#38bdf8', borderRadius: 4 }}
                 >
                   Fill Admin Credentials
@@ -351,7 +335,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
               <button
                 type="submit"
                 disabled={isSigningIn}
-                className="btn-primary"
+                className="btn btn-primary"
                 style={{
                   padding: '10px 16px',
                   fontSize: 12,
@@ -496,7 +480,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
               <button
                 type="submit"
                 disabled={isRegistering}
-                className="btn-primary"
+                className="btn btn-primary"
                 style={{
                   padding: '10px 16px',
                   fontSize: 12,

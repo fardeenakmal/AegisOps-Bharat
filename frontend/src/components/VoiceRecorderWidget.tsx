@@ -185,6 +185,7 @@ export const VoiceRecorderWidget: React.FC<VoiceRecorderWidgetProps> = ({
       const data = await transcribeVoiceAudio({
         audioBase64: b64,
         languageCode: selectedLanguage,
+        text: livePreviewText.trim() || undefined,
         latitude,
         longitude
       });
@@ -393,7 +394,7 @@ export const VoiceRecorderWidget: React.FC<VoiceRecorderWidgetProps> = ({
               <div style={{ fontSize: 10, fontWeight: 700, textTransform: 'uppercase', color: '#86efac', letterSpacing: '0.04em', marginBottom: 4 }}>
                 EOC Dispatch Translation (English)
               </div>
-              <p style={{ fontSize: 12, color: '#ededed', margin: 0, lineHeight: 1.45 }}>
+              <p style={{ fontSize: 12, color: 'var(--text-primary)', margin: 0, lineHeight: 1.45 }}>
                 {englishTranslation}
               </p>
             </div>

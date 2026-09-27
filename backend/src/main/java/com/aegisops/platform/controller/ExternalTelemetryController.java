@@ -35,6 +35,8 @@ public class ExternalTelemetryController {
     private final ResponseTeamRepository teamRepository;
     private final RiskZoneRepository zoneRepository;
     private final AlertRepository alertRepository;
+    private final com.aegisops.platform.service.HospitalCapacityService hospitalCapacityService;
+    private final com.aegisops.platform.service.CrossJurisdictionService crossJurisdictionService;
 
     public ExternalTelemetryController(
             WeatherAdapter weatherAdapter,
@@ -48,7 +50,9 @@ public class ExternalTelemetryController {
             EmergencyRequestRepository requestRepository,
             ResponseTeamRepository teamRepository,
             RiskZoneRepository zoneRepository,
-            AlertRepository alertRepository) {
+            AlertRepository alertRepository,
+            com.aegisops.platform.service.HospitalCapacityService hospitalCapacityService,
+            com.aegisops.platform.service.CrossJurisdictionService crossJurisdictionService) {
         this.weatherAdapter = weatherAdapter;
         this.geocodingAdapter = geocodingAdapter;
         this.hydrologicalAdapter = hydrologicalAdapter;
@@ -61,6 +65,8 @@ public class ExternalTelemetryController {
         this.teamRepository = teamRepository;
         this.zoneRepository = zoneRepository;
         this.alertRepository = alertRepository;
+        this.hospitalCapacityService = hospitalCapacityService;
+        this.crossJurisdictionService = crossJurisdictionService;
     }
 
     @GetMapping("/health")
@@ -155,8 +161,64 @@ public class ExternalTelemetryController {
             }
         }
 
-        DataFeedResult<List<EmergencyFacility>> res = overpassOsmAdapter.fetchHospitals(targetLat, targetLon, radius);
-        return ResponseEntity.ok(res.data());
+        List<EmergencyFacility> list = hospitalCapacityService.getHospitals(targetLat, targetLon, radius);
+        return ResponseEntity.ok(list);
+    }
+
+    @GetMapping("/api/hospitals/{id}")
+    public ResponseEntity<?> getHospitalById(@PathVariable String id) {
+        return hospitalCapacityService.getHospitalById(id)
+                .map(ResponseEntity::ok)
+                .orElse(ResponseEntity.notFound().build());
+    }
+
+    @PatchMapping({"/api/hospitals/{id}/capacity", "/api/hospitals/{id}"})
+    public ResponseEntity<?> updateHospitalCapacity(
+            @PathVariable String id,
+            @RequestBody Map<String, Object> body
+    ) {
+        Integer availableBeds = body.get("availableBeds") != null ? ((Number) body.get("availableBeds")).intValue() : null;
+        Integer availableIcuBeds = body.get("availableIcuBeds") != null ? ((Number) body.get("availableIcuBeds")).intValue() : null;
+        Integer totalBeds = body.get("totalBeds") != null ? ((Number) body.get("totalBeds")).intValue() : null;
+        Integer totalIcuBeds = body.get("totalIcuBeds") != null ? ((Number) body.get("totalIcuBeds")).intValue() : null;
+        Boolean massCasualtyMode = body.get("massCasualtyMode") != null ? (Boolean) body.get("massCasualtyMode") : null;
+        String updatedBy = (String) body.getOrDefault("updatedBy", "EOC_DISPATCHER");
+        String reason = (String) body.getOrDefault("reason", "Operator hospital triage update");
+
+        EmergencyFacility updated = hospitalCapacityService.updateCapacity(
+                id, availableBeds, availableIcuBeds, totalBeds, totalIcuBeds, massCasualtyMode, updatedBy, reason
+        );
+        return ResponseEntity.ok(Map.of("success", true, "hospital", updated, "id", id));
+    }
+
+    @PostMapping("/api/hospitals/{id}/capacity")
+    public ResponseEntity<?> postHospitalCapacity(
+            @PathVariable String id,
+            @RequestBody Map<String, Object> body
+    ) {
+        return updateHospitalCapacity(id, body);
+    }
+
+    @PostMapping("/api/hospitals/{id}/mci")
+    public ResponseEntity<?> toggleMassCasualtyProtocol(
+            @PathVariable String id,
+            @RequestBody(required = false) Map<String, Object> body
+    ) {
+        Boolean activate = body != null && body.containsKey("activate") ? (Boolean) body.get("activate") : null;
+        String reason = body != null ? (String) body.get("reason") : "Mass casualty triage activation";
+        String updatedBy = body != null ? (String) body.get("updatedBy") : "EOC_COMMANDER";
+
+        EmergencyFacility existing = hospitalCapacityService.getHospitalById(id).orElse(null);
+        boolean targetMci = activate != null ? activate : (existing != null && !existing.massCasualtyMode());
+
+        EmergencyFacility updated = hospitalCapacityService.updateCapacity(
+                id, null, null, null, null, targetMci, updatedBy, reason
+        );
+        return ResponseEntity.ok(Map.of(
+                "success", true,
+                "massCasualtyMode", updated.massCasualtyMode(),
+                "hospital", updated
+        ));
     }
 
     @GetMapping("/api/external/infrastructure")
@@ -176,12 +238,12 @@ public class ExternalTelemetryController {
             }
         }
 
-        DataFeedResult<List<EmergencyFacility>> res = overpassOsmAdapter.fetchHospitals(targetLat, targetLon, radius);
+        List<EmergencyFacility> list = hospitalCapacityService.getHospitals(targetLat, targetLon, radius);
         return ResponseEntity.ok(Map.of(
-                "facilities", res.data(),
-                "totalCount", res.data().size(),
-                "isLive", res.isLive(),
-                "provenance", res.disclaimer()
+                "facilities", list,
+                "totalCount", list.size(),
+                "isLive", true,
+                "provenance", "Live OpenStreetMap Overpass GIS & National Health Mission (NHM) Registry"
         ));
     }
 
@@ -228,7 +290,60 @@ public class ExternalTelemetryController {
                 "criticalZonesCount", criticalCount,
                 "deployedFleetCount", deployedFleet,
                 "states", stateBreakdown,
-                "crossJurisdictionRequests", List.of()
+                "crossJurisdictionRequests", crossJurisdictionService.getAllRequests()
+        ));
+    }
+
+    @PostMapping("/api/aggregation/cross-request/{id}/approve")
+    public ResponseEntity<?> approveCrossJurisdictionRequest(
+            @PathVariable String id,
+            @RequestBody(required = false) Map<String, String> body
+    ) {
+        String approvedBy = body != null ? body.get("approvedBy") : "NDMA_NATIONAL_COORDINATOR";
+        String notes = body != null ? body.get("notes") : "Authorized priority inter-state asset mobilization.";
+
+        com.aegisops.platform.service.CrossJurisdictionService.CrossJurisdictionRequest req =
+                crossJurisdictionService.approveRequest(id, approvedBy, notes);
+
+        return ResponseEntity.ok(Map.of(
+                "success", true,
+                "message", "Cross-jurisdiction asset deployment request " + id + " approved and dispatched.",
+                "request", req
+        ));
+    }
+
+    @PostMapping("/api/aggregation/cross-request/{id}/reject")
+    public ResponseEntity<?> rejectCrossJurisdictionRequest(
+            @PathVariable String id,
+            @RequestBody(required = false) Map<String, String> body
+    ) {
+        String rejectedBy = body != null ? body.get("rejectedBy") : "NDMA_COMMANDER";
+        String reason = body != null ? body.get("reason") : "Insufficient regional reserve";
+
+        com.aegisops.platform.service.CrossJurisdictionService.CrossJurisdictionRequest req =
+                crossJurisdictionService.rejectRequest(id, rejectedBy, reason);
+
+        return ResponseEntity.ok(Map.of(
+                "success", true,
+                "message", "Mutual aid request " + id + " rejected.",
+                "request", req
+        ));
+    }
+
+    @PostMapping("/api/aggregation/cross-request")
+    public ResponseEntity<?> createCrossJurisdictionRequest(@RequestBody Map<String, String> body) {
+        com.aegisops.platform.service.CrossJurisdictionService.CrossJurisdictionRequest req =
+                crossJurisdictionService.createRequest(
+                        body.get("sourceJurisdiction"),
+                        body.get("targetJurisdiction"),
+                        body.get("hazardType"),
+                        body.get("requestedResource"),
+                        body.get("urgency")
+                );
+
+        return ResponseEntity.status(201).body(Map.of(
+                "success", true,
+                "request", req
         ));
     }
 

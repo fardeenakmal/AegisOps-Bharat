@@ -76,5 +76,31 @@ public class AlertBroadcastService {
             log.warn("STOMP broadcast team error: {}", ex.getMessage());
         }
     }
+
+    public void broadcastHospitalCapacity(com.aegisops.platform.adapter.EmergencyFacility facility) {
+        try {
+            Map<String, Object> payload = Map.of(
+                    "type", "HOSPITAL_CAPACITY_UPDATED",
+                    "timestamp", Instant.now().toString(),
+                    "data", facility
+            );
+            messagingTemplate.convertAndSend("/topic/hospitals", payload);
+        } catch (Exception ex) {
+            log.warn("STOMP broadcast hospital capacity error: {}", ex.getMessage());
+        }
+    }
+
+    public void broadcastCrossJurisdictionRequest(Object request) {
+        try {
+            Map<String, Object> payload = Map.of(
+                    "type", "MUTUAL_AID_REQUEST_UPDATED",
+                    "timestamp", Instant.now().toString(),
+                    "data", request
+            );
+            messagingTemplate.convertAndSend("/topic/national", payload);
+        } catch (Exception ex) {
+            log.warn("STOMP broadcast mutual aid request error: {}", ex.getMessage());
+        }
+    }
 }
 

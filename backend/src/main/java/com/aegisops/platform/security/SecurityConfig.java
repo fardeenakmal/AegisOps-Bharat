@@ -51,12 +51,14 @@ public class SecurityConfig {
                         .requestMatchers("/api/auth/**").permitAll()
                         .requestMatchers("/actuator/**", "/health", "/health/**", "/metrics", "/metrics/**").permitAll()
                         .requestMatchers("/api/system/health").permitAll()
-                        // Public citizen reporting intake
-                        .requestMatchers(HttpMethod.POST, "/api/requests", "/api/reports").permitAll()
+                        // Public citizen reporting intake & NLP triage
+                        .requestMatchers(HttpMethod.POST, "/api/requests", "/api/reports", "/api/nlp/**").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/requests/**", "/api/reports/**").permitAll()
-                        .requestMatchers("/api/public/**").permitAll()
-                        // Public or telemetry data
-                        .requestMatchers("/api/zones/**", "/api/external/**", "/api/alerts/**").permitAll()
+                        .requestMatchers("/api/public/**", "/api/nlp/**").permitAll()
+                        // Public or telemetry data, hospitals, and national mutual aid
+                        .requestMatchers("/api/zones/**", "/api/external/**", "/api/alerts/**", "/api/hospitals/**", "/api/aggregation/**").permitAll()
+                        .requestMatchers(HttpMethod.PATCH, "/api/hospitals/**", "/api/teams/**", "/api/resources/**").permitAll()
+                        .requestMatchers(HttpMethod.POST, "/api/hospitals/**", "/api/aggregation/**").permitAll()
                         .requestMatchers("/api/predictions/**").permitAll()
                         // WebSocket STOMP handshake endpoints
                         .requestMatchers("/ws/**", "/ws-emergency/**").permitAll()

@@ -136,32 +136,18 @@ export const HospitalTriagePanel: React.FC<HospitalTriagePanelProps> = ({
 
       {/* Header & Hospital Selector */}
       <div
+        className="vercel-card"
         style={{
           padding: '12px 16px',
           display: 'flex',
           flexDirection: 'column',
-          gap: 10,
-          background: 'var(--bg-card)',
-          border: '1px solid var(--border-default)',
-          borderRadius: 8
+          gap: 10
         }}
       >
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 8 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-            <div
-              style={{
-                width: 32,
-                height: 32,
-                borderRadius: 6,
-                background: 'rgba(56, 189, 248, 0.15)',
-                border: '1px solid rgba(56, 189, 248, 0.35)',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                flexShrink: 0
-              }}
-            >
-              <HospIcon size={16} color="#38bdf8" />
+            <div className="glass-icon-box md" style={{ color: '#38bdf8' }}>
+              <HospIcon size={16} />
             </div>
             <div>
               <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
@@ -216,11 +202,9 @@ export const HospitalTriagePanel: React.FC<HospitalTriagePanelProps> = ({
       <div className="grid-responsive-2" style={{ display: 'grid', gridTemplateColumns: '1.2fr 1fr', gap: 12 }}>
         {/* Left: Capacity Gauges & MCI Mode */}
         <div
+          className="vercel-card"
           style={{
             padding: 16,
-            background: 'var(--bg-card)',
-            border: '1px solid var(--border-default)',
-            borderRadius: 8,
             display: 'flex',
             flexDirection: 'column',
             gap: 12
@@ -295,17 +279,19 @@ export const HospitalTriagePanel: React.FC<HospitalTriagePanelProps> = ({
                 disabled={isUpdating}
                 onClick={() => handleAdjustBed('availableBeds', -1)}
                 className="btn btn-secondary"
-                style={{ padding: '4px 8px', fontSize: 11, flex: 1, borderRadius: 4, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 4 }}
+                style={{ padding: '6px 8px', fontSize: 11, flex: 1, borderRadius: 6, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 4 }}
+                title="Register 1 incoming patient intake"
               >
-                <Minus size={11} /> 1 Patient Intake
+                <Minus size={12} /> Patient Intake (-1)
               </button>
               <button
                 disabled={isUpdating}
                 onClick={() => handleAdjustBed('availableBeds', 1)}
                 className="btn btn-secondary"
-                style={{ padding: '4px 8px', fontSize: 11, flex: 1, borderRadius: 4, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 4 }}
+                style={{ padding: '6px 8px', fontSize: 11, flex: 1, borderRadius: 6, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 4 }}
+                title="Register 1 patient discharge or transfer"
               >
-                <Plus size={11} /> 1 Discharge / Transfer
+                <Plus size={12} /> Discharge (+1)
               </button>
             </div>
           </div>
@@ -348,17 +334,19 @@ export const HospitalTriagePanel: React.FC<HospitalTriagePanelProps> = ({
                 disabled={isUpdating}
                 onClick={() => handleAdjustBed('availableIcuBeds', -1)}
                 className="btn btn-secondary"
-                style={{ padding: '4px 8px', fontSize: 11, flex: 1, borderRadius: 4, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 4 }}
+                style={{ padding: '6px 8px', fontSize: 11, flex: 1, borderRadius: 6, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 4 }}
+                title="Register 1 emergency ICU admission"
               >
-                <Minus size={11} /> 1 ICU Intake
+                <Minus size={12} /> ICU Intake (-1)
               </button>
               <button
                 disabled={isUpdating}
                 onClick={() => handleAdjustBed('availableIcuBeds', 1)}
                 className="btn btn-secondary"
-                style={{ padding: '4px 8px', fontSize: 11, flex: 1, borderRadius: 4, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 4 }}
+                style={{ padding: '6px 8px', fontSize: 11, flex: 1, borderRadius: 6, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 4 }}
+                title="Register 1 ICU discharge or step-down"
               >
-                <Plus size={11} /> 1 ICU Discharge
+                <Plus size={12} /> ICU Discharge (+1)
               </button>
             </div>
           </div>
@@ -366,11 +354,9 @@ export const HospitalTriagePanel: React.FC<HospitalTriagePanelProps> = ({
 
         {/* Right: Hospital Contact & Sector Facility Registry */}
         <div
+          className="vercel-card"
           style={{
             padding: 16,
-            background: 'var(--bg-card)',
-            border: '1px solid var(--border-default)',
-            borderRadius: 8,
             display: 'flex',
             flexDirection: 'column',
             gap: 12

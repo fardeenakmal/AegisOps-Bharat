@@ -830,7 +830,16 @@ export const LiveMap: React.FC<LiveMapProps> = ({
             zIndex: 410
           }}
         >
-          <Navigation size={15} color={activeTacticalRoute.isImpassableDueToFlood ? '#f85149' : '#38bdf8'} style={{ flexShrink: 0 }} />
+          <div
+            className="glass-icon-box sm"
+            style={{
+              color: activeTacticalRoute.isImpassableDueToFlood ? '#f85149' : '#38bdf8',
+              borderColor: activeTacticalRoute.isImpassableDueToFlood ? 'rgba(248, 81, 73, 0.4)' : 'rgba(56, 189, 248, 0.3)',
+              flexShrink: 0
+            }}
+          >
+            <Navigation size={12} />
+          </div>
           <div style={{ minWidth: 0 }}>
             <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--text-primary)' }}>
               OSRM Route: <span className="num-tabular">{(activeTacticalRoute.distanceMeters / 1000).toFixed(1)} km</span> &bull; <span className="num-tabular">{activeTacticalRoute.durationMinutes} min ETA</span>
@@ -881,7 +890,9 @@ export const LiveMap: React.FC<LiveMapProps> = ({
               pointerEvents: 'auto'
             }}
           >
-            <CloudRain size={13} color="#38bdf8" />
+            <div className="glass-icon-box sm" style={{ color: '#38bdf8' }}>
+              <CloudRain size={12} />
+            </div>
             <span style={{ fontWeight: 600, color: 'var(--text-primary)' }} className="num-tabular">
               {liveWeather.temperatureCelsius}°C
             </span>
@@ -907,17 +918,17 @@ export const LiveMap: React.FC<LiveMapProps> = ({
               disabled={weatherLoading}
               className="btn btn-ghost"
               title="Refresh Live Weather & Basin Telemetry"
-              style={{ padding: 2, height: 20, width: 20 }}
+              style={{ padding: 0, height: 22, width: 22, display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }}
             >
-              <RefreshCw size={10} className={weatherLoading ? 'spin-anim' : ''} color="#38bdf8" />
+              <RefreshCw size={11} className={weatherLoading ? 'spin-anim' : ''} color="#38bdf8" />
             </button>
           </div>
         )}
 
         {/* Center / Right: Layer Toggles, OSM Harvester & Clean Legend */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: 6, pointerEvents: 'auto', flexWrap: 'wrap' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 6, pointerEvents: 'auto', flexWrap: 'nowrap', overflowX: 'auto', maxWidth: '100%', paddingBottom: 2, scrollbarWidth: 'none' }}>
           {/* Real Disaster Layer Toggles */}
-          <div className="hud-card" style={{ display: 'flex', alignItems: 'center', gap: 3, padding: '2px 4px' }}>
+          <div className="hud-card" style={{ display: 'flex', alignItems: 'center', gap: 3, padding: '2px 4px', flexShrink: 0 }}>
             <button
               onClick={() => setShowEarthquakes((prev) => !prev)}
               className="btn"
@@ -993,7 +1004,7 @@ export const LiveMap: React.FC<LiveMapProps> = ({
             onClick={handleHarvestInfrastructure}
             disabled={isHarvesting}
             className="btn btn-secondary"
-            style={{ fontSize: 11, padding: '4px 9px', height: 26 }}
+            style={{ fontSize: 11, padding: '4px 9px', height: 26, display: 'inline-flex', alignItems: 'center', gap: 5 }}
             title="Harvest emergency infrastructure (hospitals, fire, helipads) from OpenStreetMap"
           >
             <Building2 size={12} color="#38bdf8" />

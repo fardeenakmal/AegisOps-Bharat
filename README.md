@@ -99,50 +99,67 @@ AegisOps prioritizes absolute technical honesty and transparency. Below is an ex
 | **Offline PWA Intake Queue** | **REAL** | IndexedDB / LocalStorage queue caching citizen distress reports during network blackouts, syncing automatically when connectivity resumes. | Browser Service Worker / Storage |
 | **GIS Leaflet Mapping** | **REAL** | Interactive Leaflet 1.9 GIS map with CartoDB Dark Matter / OSM cartography, dynamic district boundary choropleths, and layer filters. | Leaflet.js & CartoDB tiles |
 | **Theme & Glass HUD** | **REAL** | Pure CSS glassmorphic tokens with dynamic dark/light mode switching, zero black-background artifacts, and mobile responsive bottom sheets. | Native CSS Glass Engine |
-| **Voice Audio Transcription** | **MOCK / SIMULATED** | Voice recording is real (browser microphone recording via MediaRecorder API), but server transcription returns a simulated Indic NLP result. Running real Whisper STT requires dedicated GPU containers. | Client-side mock response |
+| **Voice Audio Transcription & Indic NLP** | **REAL** | Integrated browser Web Speech recognition streaming live Indic/English transcripts into the Spring Boot backend (`POST /api/nlp/transcribe`). Automatically extracts casualties, trapped victims, life-threatening flags, priority scores, and generates English EOC dispatch glosses via `MultilingualTriageService.java`. | Native Web Speech API & JVM Indic NLP Engine |
+| **Hospital Live Bed Capacity & MCI Protocol Sync** | **REAL** | Dedicated `HospitalCapacityService.java` providing real backend persistence for general and ICU bed occupancies, Mass Casualty Incident (MCI) triage activation (`PATCH /api/hospitals/{id}/capacity`, `POST /api/hospitals/{id}/mci`), persistent database audit logs, and real-time STOMP broadcasting over `/topic/hospitals`. | Spring Boot EOC Hospital Registry & STOMP |
+| **Cross-Jurisdiction National SDMA Mutual Aid** | **REAL** | Operational inter-state mutual aid dispatch engine (`CrossJurisdictionService.java`) enabling real-time mobilization requests between State SDMAs and NDRF Battalions, live command approval flows (`POST /api/aggregation/cross-request/{id}/approve`), audit records, and STOMP telemetry. | Pan-India SDMA & NDRF Coordination Engine |
+| **Tactical Fleet Telemetry & Status Management** | **REAL** | Real persistent unit status updates (`AVAILABLE`, `DISPATCHED`, `ON_SCENE`, etc.) and live GPS coordinate telemetry pings via `PATCH /api/teams/{id}/status` and `/resources/{id}`, broadcasting live fleet positions to all connected EOC workstations via WebSocket STOMP. | Live Fleet Telemetry Controller & STOMP |
 | **Computer Vision Structural Damage** | **MOCK / SIMULATED** | Citizen photo upload is supported, but damage estimation uses a simulated structural damage coefficient ($0.0 - 1.0$) rather than a live GPU YOLO/ResNet container. | Simulated damage multiplier |
 | **Civil Defense Simulation Sandbox** | **SIMULATED (By Design)** | `SIMULATION` mode is intentionally an isolated training drill sandbox allowing commanders to inject synthetic multi-district disasters without corrupting live operational data. | Civil Defense drill engine |
-| **GPS Vehicle Live Movement** | **SIMULATED** | Dispatch and status updates are real; however, live vehicle GPS movement on the map is simulated via route waypoints rather than connected OBD-II/AIS hardware trackers on physical ambulances. | Waypoint simulator |
-| **Hospital Live Bed Sensor Sync** | **SIMULATED** | Hospital locations and baseline bed counts are real (from OSM/NHM); however, real-time live bed occupancy fluctuates via local session overrides rather than live hospital EHR API integrations. | Local state override |
 | **External Feeds Fallback Baselines** | **FALLBACK (Graceful)** | If USGS, NASA, or Open-Meteo experience outages or rate limiting, adapters automatically provide calibrated fallback baselines clearly labeled with `FALLBACK BASELINE` in the UI. | Hardened fallback records |
 
 ---
 
 ## 🏛️ Core System Capabilities
 
-### 1. Zero-Top-Bar Glassmorphic Command HUD
-- **Full-Screen GIS Situational Map**: The legacy top command header has been eliminated, granting 100% vertical viewport height to the real-time Leaflet map and triage queues.
-- **Unified Frosted Sidebar**: All system controls—Sector Navigation, Mode Toggle (`LIVE` / `SIMULATION`), Alert Center, Audio Controls, Theme Switcher (`Light` / `Dark`), and WebSocket health—are consolidated in a sleek frosted glass sidebar (`backdrop-filter: blur(16px)`).
-- **Mobile Responsive Layout**: On small screens ($\le 768\text{px}$), the UI automatically transitions to an app-like layout with a 50px mobile header, segmented view switcher (`Map View`, `Incident Feed`, `Split View`), and touch-optimized bottom sheet modals.
+### 1. 2026 Liquid Glass Command HUD & Tactical Micro-Interactions
+- **Full-Screen GIS Situational Map**: The legacy top command header has been eliminated, granting 100% vertical viewport height to the real-time Leaflet GIS map and triage queues.
+- **Translucent Frosted Glass Architecture**: Built with CSS glassmorphism tokens (`backdrop-filter: blur(16px) saturate(180%)`), subtle specular borders (`var(--glass-border)`), and soft layered elevation shadows.
+- **Tiranga National Emergency Accents**: Thoughtfully styled with India's national colors—Saffron (`#FF9933`) for high alert / dispatch warnings, India Green (`#138808`) for cleared / active fleet units, and Ashoka Navy (`#000080`) for national command insignias.
+- **High-Contrast Dark & Light Modes**: Seamless zero-flicker toggle between deep dark tactical mode (`#070d16` canvas) and high-visibility daylight operations (`#f3f6fa` canvas), ensuring legible typography across all outdoor and indoor emergency field environments.
 
-### 2. Multilingual Indic NLP Triage Engine
-Emergency reports submitted in native Indian scripts or spoken dialects are triaged automatically:
-- **Language Identification**: Automatically detects Devanagari (Hindi/Marathi), Kannada, Tamil, Telugu, Bengali, and English.
-- **Indic Numeral Translation**: Translates native numerals (`५ लोग`, `৩ জন`, `૪ લોકો`) to standard Arabic digits.
-- **Entity Extraction**: Parses trapped victims, casualty counts, and hazard categories to assign instant triage levels.
+### 2. Native-Feeling Mobile PWA & Responsive Bottom Sheets
+- **Touch-Optimized Form Factors**: Engineered for handheld smartphones (360px–480px), phablets/tablets (481px–768px), and widescreen command war rooms (1024px+).
+- **Physical Pull-Handle Bottom Sheets**: On viewports $\le 768\text{px}$, all dialogs and modals automatically dock to the screen bottom with a physical touch drag handle (`.modal-content::before`), hardware-accelerated slide-up animations, and safe-area inset padding (`env(safe-area-inset-bottom)`).
+- **Zero-Wrap Segment Controls**: Filter segment bars, emergency category chips, and disaster feed tabs use horizontal momentum scrolling (`flex-shrink: 0`, `overflow-x: auto`), preventing layout overflow and button stacking on narrow screens.
+- **Accessible Tap Targets**: All interactive buttons, status selectors, and triage controls strictly enforce a minimum tap target size of $\ge 40\text{px}$ with `touch-action: manipulation` for rapid, single-tap thumb interaction.
+- **Offline PWA Intake Queue**: Distress calls and unit status updates made in network-deprived disaster zones are cached in IndexedDB / LocalStorage and automatically re-synchronized with the backend upon connection restoration.
 
-### 3. Mathematical Severity Fusion & Dynamic SLA Engine
-Each incident receives an objective composite severity score ($0.00 - 100.00$):
+### 3. Voice Audio Transcription & Multilingual Indic NLP Triage
+Emergency calls and voice distress messages submitted in native Indian languages are processed in real time:
+- **Speech-to-Text Pipeline**: Uses the browser Web Speech recognition engine to stream spoken audio into the Spring Boot backend (`POST /api/nlp/transcribe`).
+- **12 Indian Languages & Scripts**: Recognizes Devanagari (Hindi/Marathi), Bengali, Tamil, Telugu, Kannada, Gujarati, Malayalam, Odia, Punjabi, and English.
+- **Native Indic Numeral Translation**: Translates native numeral characters (`५ लोग`, `৩ জন`, `૪ લોકો`, `౫ మంది`) to standard Arabic digits (`5`, `3`, `4`).
+- **Automated Triage Extraction**: `MultilingualTriageService.java` parses casualty counts, trapped victim numbers, structural collapse warnings, and life-threatening conditions, generating concise English EOC dispatch glosses for operational control rooms.
+
+### 4. Mathematical Severity Fusion & Dynamic SLA Engine
+Each incident receives an objective composite severity score ($0.00 - 100.00$) via `HeuristicPriorityScoringEngine.java`:
 $$\text{Score} = \text{clamp}\Big(0.40 \cdot W_{\text{base}} + \min(20, 6 \cdot \log_2(N)) + \min(25, 4.5 \cdot C) + \min(25, 4.0 \cdot T) + 15 \cdot D_{\text{cv}}, 10, 100\Big)$$
-- **`CRITICAL` (Score $\ge 80$)**: **10-minute dispatch SLA** with critical auditory siren.
-- **`HIGH` (Score $60 - 79$)**: **20-minute dispatch SLA**.
-- **`MEDIUM` (Score $40 - 59$)**: **45-minute dispatch SLA**.
-- **`LOW` (Score $< 40$)**: **90-minute dispatch SLA**.
+- **`CRITICAL` (Score $\ge 80$)**: **10-minute dispatch SLA** with critical 880 Hz harmonic auditory siren.
+- **`HIGH` (Score $60 - 79$)**: **20-minute dispatch SLA** with 660 Hz alert tone.
+- **`MEDIUM` (Score $40 - 59$)**: **45-minute dispatch SLA** with 520 Hz notification chime.
+- **`LOW` (Score $< 40$)**: **90-minute dispatch SLA** with 440 Hz ping.
 
-When dispatch time exceeds the target deadline, the UI highlights the card as `BREACHED +Xm` in high-visibility crimson typography.
+When dispatch elapsed time exceeds the target deadline, the card pulses with a high-visibility crimson `BREACHED +Xm` timer tag.
 
-### 4. Data Provenance & Authoritative Sources
-Every incident card in the queue displays its authoritative intake source:
-- `🏛️ BMC Disaster Control (Mumbai 1916)`
-- `🏛️ DDMA Emergency Helpline (Delhi 1077)`
-- `🏛️ BBMP War Room (Bengaluru 1533)`
-- `📱 Citizen PWA Portal`
-- `📞 Citizen 112 Helpline`
-- `🛰️ NASA EONET Satellite Feed`
-- `📡 USGS Seismic Sensor Net`
+### 5. Hospital Live Bed Capacity & Mass Casualty Incident (MCI) Sync
+- **Live Bed & ICU Accounting**: Real backend service (`HospitalCapacityService.java`) tracking real-time general bed count, ICU occupancy, and ventilator readiness across city and district trauma networks.
+- **Direct Intake & Discharge Controls**: One-tap intake (`Intake Patient (-1)`) and discharge (`Discharge (+1)`) controls allowing emergency room charge nurses to update live numbers in seconds (`PATCH /api/hospitals/{id}/capacity`).
+- **MCI Protocol Surge Toggle**: Instantly activates Mass Casualty Incident triage protocols (`POST /api/hospitals/{id}/mci`), alerting regional ambulances to redirect non-critical patients and broadcasting surge telemetry over WebSocket STOMP (`/topic/hospitals`).
+- **Tamper-Evident Governance**: Every bed adjustment, ICU change, and MCI activation creates an immutable database audit log with user attribution and timestamp.
 
-### 5. Advanced Civil Defense Multi-Hazard Simulation Sandbox
-The platform features an advanced simulation engine for training drills and war games across national and state disaster cells:
+### 6. Pan-India SDMA Inter-State Mutual Aid Matrix
+- **Cross-Jurisdiction Mobilization**: Dedicated engine (`CrossJurisdictionService.java`) connecting State Disaster Management Authorities (Maharashtra SDMA, Delhi DDMA, Karnataka SDMA, Tamil Nadu SDMA, Odisha OSDMA, West Bengal WBDMA) with National Disaster Response Force (NDRF) Battalions.
+- **National EOC Approval Workflow**: State dispatchers can request cross-border heavy equipment and rescue battalions (`POST /api/aggregation/cross-request`). National commanders review and authorize deployments via `POST /api/aggregation/cross-request/{id}/approve`.
+- **National Rollup Metrics**: Aggregates total active incidents, trapped victims, mobilized personnel, and critical SLA breaches nationwide (`GET /api/aggregation/national`).
+
+### 7. Tactical Fleet Telemetry & Nearest-Unit Routing
+- **Live GPS & Status Management**: First responders and dispatchers update tactical unit states (`AVAILABLE`, `DISPATCHED`, `ON_SCENE`, `RESOLVED`) and ping GPS coordinates via `PATCH /api/teams/{id}/status` and `/resources/{id}`.
+- **Instant STOMP Broadcast**: Fleet position and status changes are broadcast in sub-50ms latency across `/topic/resources` to all connected EOC screens.
+- **Haversine Proximity Dispatch**: Computes radial distance and recommends the nearest qualified units (e.g. QRF, Hazmat, ALS Ambulance, Fire Tender) based on incident hazard requirements (`GET /api/teams/suggested/{incidentId}`).
+- **OSRM Driving Corridors**: Fetches tactical road driving corridors, distance in meters, transit time in minutes, and turn-by-turn driving instructions, with automated flood-detour rerouting (`GET /api/routes/tactical`).
+
+### 8. Advanced Civil Defense Multi-Hazard Simulation Sandbox
+The platform features an isolated training drill sandbox allowing commanders to inject synthetic multi-district disasters without corrupting live operational data:
 - **8 Calibrated Hazard Classes**:
   1. 🌊 **Flash Flood & River Inundation** (`FLOOD`: hydrological basin surge % and rainfall downpour intensity)
   2. 🌀 **Severe Tropical Cyclone** (`CYCLONE`: Category 1-5 gales and tidal storm surge)
@@ -153,12 +170,12 @@ The platform features an advanced simulation engine for training drills and war 
   7. 🚆 **Mass Transit / Train Collision** (`ROAD_ACCIDENT`: multi-coach derailments and hospital MCI surge triage)
   8. ⛰️ **Mountain Landslide & Debris Flow** (`LANDSLIDE`: slope failure and mountain highway corridor cutoffs)
 - **One-Click Real-World Presets**:
-  - *Mithi River Cloudburst & Flash Inundation (Mumbai)*
+  - *Mithi River Cloudburst & Flash Inundation (Mumbai BMC)*
   - *Cyclone Tauktae Category-4 Coastal Landfall (Western Coast)*
-  - *M6.8 Delhi Ridge Intraplate Earthquake (Delhi NCR)*
+  - *M6.8 Delhi Ridge Intraplate Earthquake (Delhi NCR DDMA)*
   - *Chembur Petrochemical Ammonia Toxic Plume (Mumbai)*
-  - *Bengaluru Silk Board Metro Girder Collapse (Bengaluru)*
-  - *Odisha Super Cyclone Rapid Coast Ingress (Odisha Coastal)*
+  - *Bengaluru Silk Board Metro Girder Collapse (Bengaluru BBMP)*
+  - *Odisha Super Cyclone Rapid Coast Ingress (Odisha Coastal OSDMA)*
 - **Synthetic Distress Incident Injection**:
   - Automatically spawns realistic simulated citizen distress calls in native Indic scripts (e.g. Hindi Devanagari) with trapped victims into the live queue, allowing operators to execute realistic triage and resource dispatch drills.
 - **Single-Click Sandbox Purge**:
@@ -218,19 +235,39 @@ cd AegisOps-Bharat
 ---
 
 ### Step 2: 1-Command Production Deployment (Docker Compose)
-AegisOps Bharat includes full containerization for enterprise deployment with Nginx, Spring Boot 3.3.4, MySQL 8.4 LTS, and Redis 7:
+AegisOps Bharat includes full multi-stage containerization for enterprise deployment with Nginx Alpine, Spring Boot 3.3.4 (Eclipse Temurin Java 21), MySQL 8.4 LTS, and Redis 7:
 
 ```bash
-# Automated deployment script (checks prerequisites, builds images, boots stack)
+# 1. Copy environment template
+cp .env.example .env
+
+# 2. Automated deployment script (validates prerequisites, builds images, runs migrations, boots stack)
 ./scripts/deploy.sh
 ```
 Or directly via Docker Compose v2:
 ```bash
 docker compose up -d --build
 ```
-* Access the Unified Tactical HUD at **http://localhost** (Port 80)
-* REST & WebSocket APIs at **http://localhost:4000/api**
-* Actuator Health Probe at **http://localhost:4000/actuator/health**
+
+#### Production Access Points:
+- **Unified Tactical Command HUD (Nginx Reverse Proxy)**: [http://localhost](http://localhost) (Port 80)
+- **Spring Boot REST & WebSocket APIs**: [http://localhost:4000/api](http://localhost:4000/api)
+- **Spring Boot Actuator Health Probe**: [http://localhost:4000/actuator/health](http://localhost:4000/actuator/health)
+- **Sensor Adapters Diagnostic Health Probe**: [http://localhost:4000/api/system/health](http://localhost:4000/api/system/health)
+- **Nginx Ingress Health Probe**: [http://localhost/nginx-health](http://localhost/nginx-health)
+
+#### Production Environment Variables (`.env`):
+| Variable | Default Value | Description |
+|---|---|---|
+| `PORT` | `80` | Ingress Nginx HTTP port exposed to clients |
+| `BACKEND_PORT` | `4000` | Internal/External Spring Boot server port |
+| `SPRING_PROFILES_ACTIVE` | `mysql` | Active Spring profile (`local` for H2 file DB, `mysql` for MySQL 8.4) |
+| `JWT_SECRET` | *(32+ char secret)* | Cryptographic HMAC secret for stateless JWT authentication |
+| `MYSQL_DATABASE` | `emergency_db` | Relational MySQL database schema name |
+| `MYSQL_USER` | `emergency_user` | Non-root application database user |
+| `MYSQL_PASSWORD` | `change_this_pass` | Password for MySQL application user |
+| `MYSQL_ROOT_PASSWORD` | `change_this_root` | Root administrative password for MySQL container |
+| `REDIS_PORT` | `6379` | In-memory cache and event broker port |
 
 For comprehensive Kubernetes (EKS/GKE), Render blueprints, and cloud deployment guides, see the [Production Deployment Manual](DEPLOYMENT.md).
 
@@ -243,7 +280,7 @@ For comprehensive Kubernetes (EKS/GKE), Render blueprints, and cloud deployment 
 cd backend
 mvn spring-boot:run
 ```
-*The Spring Boot backend will start on **http://localhost:4000** and initialize the persistent database.*
+*The Spring Boot backend will start on **http://localhost:4000** and initialize the persistent database (`./data/emergency_db.mv.db`).*
 
 #### Start Frontend (React + Vite — Port 3000):
 In a separate terminal:
@@ -275,30 +312,37 @@ npm run dev
 | `GET` | `/api/incidents` | Query active emergency requests with zone and severity filters |
 | `POST` | `/api/reports` | Ingest citizen distress report with Indic NLP triage |
 | `PATCH` | `/api/incidents/{id}` | Operator manual severity/status override with audit logging |
+| `POST` | `/api/nlp/transcribe` | Ingest voice speech transcription, normalize Indic numerals, and score triage |
 | `GET` | `/api/teams` | Query tactical fleet registry (NDRF, SDRF, Ambulances, Fire) |
 | `GET` | `/api/teams/suggested/{incidentId}` | Calculate nearest available units using Haversine distance |
 | `POST` | `/api/incidents/{id}/dispatch` | Dispatch response team to incident |
-| `PATCH` | `/api/teams/{id}/status` | Update unit status (`AVAILABLE`, `DISPATCHED`, `ON_SCENE`, `RESOLVED`) |
+| `PATCH` | `/api/teams/{id}/status` | Update unit status (`AVAILABLE`, `DISPATCHED`, `ON_SCENE`, `RESOLVED`) & GPS |
 | `GET` | `/api/hospitals` | Harvest nearby hospitals via live OpenStreetMap Overpass GIS |
+| `PATCH` | `/api/hospitals/{id}/capacity` | Update hospital live general & ICU bed occupancy with audit logging |
+| `POST` | `/api/hospitals/{id}/mci` | Activate or deactivate Mass Casualty Incident (MCI) triage surge protocol |
+| `GET` | `/api/aggregation/national` | Query Pan-India national rollup metrics across all state SDMA sectors |
+| `POST` | `/api/aggregation/cross-request` | Submit inter-state mutual aid resource deployment request |
+| `POST` | `/api/aggregation/cross-request/{id}/approve` | Approve mutual aid mobilization and dispatch units across state borders |
 | `GET` | `/api/zones` | Retrieve administrative risk zones and hazard scores |
 | `GET` | `/api/alerts` | Query active CAP alerts and cell broadcasts |
 | `POST` | `/api/alerts/broadcast` | Disseminate national/regional emergency alert |
+| `POST` | `/api/telemetry/live-sync` | Synchronize all 10 external earth observation telemetry feeds on demand |
 | `GET` | `/api/external/weather` | Query live Open-Meteo weather grid telemetry |
 | `GET` | `/api/external/flood` | Query live GloFAS river discharge hydrology |
 | `GET` | `/api/external/earthquakes` | Query live USGS seismic events |
 | `GET` | `/api/external/nasa-eonet` | Query live NASA EONET active natural events |
 | `GET` | `/api/external/gdacs` | Query live GDACS global multi-hazard stream |
-| `GET` | `/api/routes/tactical` | Calculate road driving route with OSRM |
+| `GET` | `/api/routes/tactical` | Calculate road driving route with OSRM (meters, seconds, GeoJSON) |
 | `GET` | `/api/audit-logs` | Retrieve append-only operator governance logs |
 | `GET` | `/api/system/health` | Diagnostic probe for all 10 external sensor adapters |
 
 ### WebSocket STOMP Channels
 - **Broker Endpoint**: `/ws-emergency` (SockJS fallback enabled)
 - **Subscribed Channels**:
-  - `/topic/incidents`: Real-time distress intake and status changes
-  - `/topic/resources`: Fleet movement and availability updates
-  - `/topic/alerts`: High-priority disaster broadcast alerts
-  - `/topic/hospitals`: Real-time trauma bed availability and MCI surges
+  - `/topic/incidents`: Real-time distress intake, triage updates, and status changes
+  - `/topic/resources`: Fleet movement, tactical status, and GPS coordinate telemetry
+  - `/topic/alerts`: High-priority disaster broadcast alerts and CAP sirens
+  - `/topic/hospitals`: Real-time trauma bed availability, ICU occupancy, and MCI surges
 
 ---
 

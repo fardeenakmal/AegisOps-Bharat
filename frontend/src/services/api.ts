@@ -348,48 +348,38 @@ export async function fetchNationalRollup(): Promise<any> {
 }
 
 export async function approveCrossJurisdictionRequest(id: string) {
-  try {
-    const res = await fetch(`${API_BASE}/aggregation/cross-request/${id}/approve`, {
-      method: 'POST',
-      headers: { ...getAuthHeader() }
-    });
-    if (res.ok) return await res.json();
-  } catch {}
-  return { success: true, message: `Cross-jurisdiction asset deployment request ${id} approved.` };
+  const res = await fetch(`${API_BASE}/aggregation/cross-request/${id}/approve`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...getAuthHeader() },
+    body: JSON.stringify({ approvedBy: 'NDMA_NATIONAL_COORDINATOR', notes: 'Authorized priority inter-state asset mobilization.' })
+  });
+  if (!res.ok) {
+    throw new Error(`Failed to approve cross-jurisdiction request ${id}`);
+  }
+  return await res.json();
 }
 
 export async function transcribeVoiceAudio(payload: {
-  audioBase64: string;
+  audioBase64?: string;
   languageCode?: string;
+  text?: string;
   latitude?: number;
   longitude?: number;
 }) {
-  try {
-    const res = await fetch(`${API_BASE}/nlp/transcribe`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', ...getAuthHeader() },
-      body: JSON.stringify(payload)
-    });
-    if (res.ok) return await res.json();
-  } catch {}
-  return {
-    transcript: 'कुर्ला में भारी बारिश से ५ लोग पानी में फंसे हैं',
-    englishTranslation: '5 people are trapped in flood waters due to heavy rain in Kurla',
-    detectedLanguage: payload.languageCode || 'hi',
-    nlpTriage: {
-      category: 'LIFE_THREATENING',
-      incidentType: 'FLOOD',
-      estimatedCasualties: 0,
-      estimatedTrapped: 5,
-      priorityLevel: 'CRITICAL',
-      priorityScore: 92.0
-    }
-  };
+  const res = await fetch(`${API_BASE}/nlp/transcribe`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...getAuthHeader() },
+    body: JSON.stringify(payload)
+  });
+  if (!res.ok) {
+    throw new Error('Failed to transcribe and triage voice audio via AegisOps NLP service');
+  }
+  return await res.json();
 }
 
 export const updateIncident = operatorOverrideIncident;
 
-// Real Overpass-backed Trauma Centres & Emergency Hospitals
+// Real Overpass & NHM-backed Trauma Centres & Emergency Hospitals
 export async function fetchHospitals(zone?: string, lat?: number, lon?: number): Promise<any[]> {
   const query = new URLSearchParams();
   if (zone) query.set('zone', zone);
@@ -398,23 +388,31 @@ export async function fetchHospitals(zone?: string, lat?: number, lon?: number):
 
   const res = await fetch(`${API_BASE}/hospitals?${query.toString()}`);
   if (!res.ok) return [];
-  const list = await res.json();
-  try {
-    const overrides = JSON.parse(localStorage.getItem('aegisops_hospital_overrides') || '{}');
-    return list.map((h: any) => ({ ...h, ...(overrides[h.id] || {}) }));
-  } catch {
-    return list;
-  }
+  return await res.json();
 }
 
 export async function updateHospitalCapacity(id: string, payload: any): Promise<any> {
-  // Update local session storage / mock update for emergency bed count
-  try {
-    const saved = JSON.parse(localStorage.getItem('aegisops_hospital_overrides') || '{}');
-    saved[id] = { ...(saved[id] || {}), ...payload, updatedAt: new Date().toISOString() };
-    localStorage.setItem('aegisops_hospital_overrides', JSON.stringify(saved));
-  } catch {}
-  return { success: true, id, ...payload };
+  const res = await fetch(`${API_BASE}/hospitals/${id}/capacity`, {
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json', ...getAuthHeader() },
+    body: JSON.stringify(payload)
+  });
+  if (!res.ok) {
+    throw new Error(`Failed to update capacity for hospital ${id}`);
+  }
+  return await res.json();
+}
+
+export async function updateTeamStatus(teamId: string, payload: { status?: string; latitude?: number; longitude?: number; notes?: string }) {
+  const res = await fetch(`${API_BASE}/teams/${teamId}/status`, {
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json', ...getAuthHeader() },
+    body: JSON.stringify(payload)
+  });
+  if (!res.ok) {
+    throw new Error(`Failed to update status for team ${teamId}`);
+  }
+  return await res.json();
 }
 
 // Live External Disaster Feeds

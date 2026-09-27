@@ -358,10 +358,12 @@ export const Navbar: React.FC<NavbarProps> = ({
                   right: 0,
                   marginTop: 6,
                   width: 230,
-                  background: 'var(--bg-surface)',
-                  border: '1px solid var(--border-medium)',
+                  background: 'var(--glass-bg-card)',
+                  backdropFilter: 'blur(24px) saturate(180%)',
+                  WebkitBackdropFilter: 'blur(24px) saturate(180%)',
+                  border: '1px solid var(--glass-border)',
                   borderRadius: 8,
-                  boxShadow: '0 12px 32px rgba(0, 0, 0, 0.4)',
+                  boxShadow: 'var(--glass-shadow-lg)',
                   padding: 4,
                   zIndex: 1100,
                   display: 'flex',
@@ -502,8 +504,10 @@ export const Navbar: React.FC<NavbarProps> = ({
         <div
           style={{
             padding: '12px 16px',
-            background: 'var(--bg-surface)',
-            borderBottom: '1px solid var(--border-medium)',
+            background: 'var(--glass-bg-card)',
+            backdropFilter: 'blur(24px) saturate(180%)',
+            WebkitBackdropFilter: 'blur(24px) saturate(180%)',
+            borderBottom: '1px solid var(--glass-border)',
             display: 'flex',
             flexDirection: 'column',
             gap: 10

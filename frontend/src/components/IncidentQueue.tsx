@@ -248,7 +248,7 @@ export const IncidentQueue: React.FC<IncidentQueueProps> = ({
               key={f.id}
               onClick={() => setSelectedFilter(f.id as any)}
               className={`segmented-btn ${selectedFilter === f.id ? 'active' : ''}`}
-              style={{ flex: 1, minWidth: 60, textAlign: 'center', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 4, padding: '5px 8px' }}
+              style={{ flex: '1 0 auto', minWidth: 'fit-content', whiteSpace: 'nowrap', textAlign: 'center', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 4, padding: '6px 10px', fontSize: 11 }}
             >
               <span>{f.label}</span>
               <span style={{ opacity: 0.75, fontSize: 10 }} className="num-tabular">({f.count})</span>
@@ -328,7 +328,28 @@ export const IncidentQueue: React.FC<IncidentQueueProps> = ({
                 {/* Top Row: Type, Tracking Code, Life-Threatening Chip, Priority Badge */}
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8, marginBottom: 7 }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 6, minWidth: 0, flexWrap: 'wrap' }}>
-                    <span style={{ display: 'flex', alignItems: 'center', flexShrink: 0 }}>
+                    <span
+                      className="glass-icon-box sm"
+                      style={{
+                        width: 24,
+                        height: 24,
+                        borderRadius: 6,
+                        background: isLifeThreat
+                          ? 'rgba(239, 68, 68, 0.16)'
+                          : isCritical
+                          ? 'rgba(248, 81, 73, 0.16)'
+                          : level === 'HIGH'
+                          ? 'rgba(245, 158, 11, 0.16)'
+                          : 'rgba(56, 189, 248, 0.14)',
+                        border: `1px solid ${
+                          isLifeThreat || isCritical
+                            ? 'rgba(248, 81, 73, 0.4)'
+                            : level === 'HIGH'
+                            ? 'rgba(245, 158, 11, 0.4)'
+                            : 'rgba(56, 189, 248, 0.35)'
+                        }`
+                      }}
+                    >
                       {getIncidentIcon(type)}
                     </span>
                     <span
@@ -351,11 +372,12 @@ export const IncidentQueue: React.FC<IncidentQueueProps> = ({
                           background: 'rgba(239, 68, 68, 0.15)',
                           color: '#ef4444',
                           border: '1px solid rgba(239, 68, 68, 0.35)',
-                          padding: '1px 5px',
+                          padding: '2px 5px',
                           borderRadius: 4,
                           letterSpacing: '0.03em',
                           textTransform: 'uppercase',
-                          flexShrink: 0
+                          flexShrink: 0,
+                          lineHeight: 1
                         }}
                       >
                         Life-Threatening
@@ -371,7 +393,7 @@ export const IncidentQueue: React.FC<IncidentQueueProps> = ({
                         ? 'badge-high'
                         : 'badge-medium'
                     }`}
-                    style={{ flexShrink: 0, fontSize: 10, padding: '2px 7px' }}
+                    style={{ flexShrink: 0, fontSize: 10, padding: '2.5px 8px' }}
                   >
                     <span className="badge-dot" />
                     <span>{level} &bull; {score.toFixed(0)}</span>
@@ -407,17 +429,18 @@ export const IncidentQueue: React.FC<IncidentQueueProps> = ({
                     style={{
                       display: 'inline-flex',
                       alignItems: 'center',
-                      gap: 4,
+                      gap: 5,
                       background: 'var(--glass-bg-subtle)',
                       border: '1px solid var(--glass-border-light)',
                       padding: '2px 7px',
-                      borderRadius: 4,
+                      borderRadius: 5,
                       fontWeight: 600,
-                      color: 'var(--text-primary)'
+                      color: 'var(--text-primary)',
+                      lineHeight: 1.3
                     }}
                     title={`Source of Information: ${sourceInfo.sourceLabel} - Authenticity Verified`}
                   >
-                    <span>{sourceInfo.icon}</span>
+                    <span style={{ display: 'inline-flex', alignItems: 'center' }}>{sourceInfo.icon}</span>
                     <span style={{ fontSize: 9.5, fontWeight: 700, color: 'var(--accent-cyan)' }}>{sourceInfo.sourceBadge}</span>
                     <span style={{ color: 'var(--text-muted)' }}>&bull;</span>
                     <span style={{ fontSize: 10 }}>{sourceInfo.sourceLabel}</span>
@@ -431,9 +454,11 @@ export const IncidentQueue: React.FC<IncidentQueueProps> = ({
                 </div>
 
                 {/* Address & GPS */}
-                <div style={{ display: 'flex', alignItems: 'center', gap: 5, fontSize: 11, color: 'var(--text-secondary)', marginBottom: 8 }}>
-                  <MapPin size={12} color="var(--text-muted)" style={{ flexShrink: 0 }} />
-                  <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', flex: 1, minWidth: 0 }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 11, color: 'var(--text-secondary)', marginBottom: 8 }}>
+                  <span style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                    <MapPin size={12} color="var(--text-muted)" />
+                  </span>
+                  <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', flex: 1, minWidth: 0, lineHeight: 1.3 }}>
                     {inc.address || inc.reportedAddress}
                   </span>
                   {inc.latitude && inc.longitude && (
@@ -457,7 +482,7 @@ export const IncidentQueue: React.FC<IncidentQueueProps> = ({
                   {/* SLA Aging badge */}
                   <div
                     style={{
-                      display: 'flex',
+                      display: 'inline-flex',
                       alignItems: 'center',
                       gap: 5,
                       color: sla.isBreached ? '#ef4444' : 'var(--text-secondary)',
@@ -466,24 +491,23 @@ export const IncidentQueue: React.FC<IncidentQueueProps> = ({
                     }}
                     title={`Target SLA: ${sla.targetMins} minutes`}
                   >
-                    <Timer size={12} color={sla.isBreached ? '#ef4444' : '#38bdf8'} />
+                    <span style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                      <Timer size={12} color={sla.isBreached ? '#ef4444' : '#38bdf8'} />
+                    </span>
                     <span className="num-tabular">{sla.text}</span>
                   </div>
 
                   <button
                     onClick={(e) => {
-                      e.stopPropagation();
-                      onOpenDispatch(inc);
+                       e.stopPropagation();
+                       onOpenDispatch(inc);
                     }}
                     className="btn btn-primary"
                     style={{
                       padding: '3px 10px',
                       fontSize: 11,
                       height: 26,
-                      borderRadius: 5,
-                      background: 'var(--accent-blue)',
-                      borderColor: 'var(--accent-blue)',
-                      color: '#ffffff',
+                      borderRadius: 6,
                       display: 'inline-flex',
                       alignItems: 'center',
                       gap: 5,

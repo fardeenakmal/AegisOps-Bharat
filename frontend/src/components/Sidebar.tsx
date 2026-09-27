@@ -370,21 +370,21 @@ export const Sidebar: React.FC<SidebarProps> = ({
                     alignItems: 'center',
                     gap: isCollapsed ? 0 : 10,
                     justifyContent: isCollapsed ? 'center' : 'flex-start',
-                    padding: isCollapsed ? '7px 0' : '8px 10px',
-                    borderRadius: 7,
+                    padding: isCollapsed ? '5px 0' : '6px 8px',
+                    borderRadius: 8,
                     border: 'none',
                     cursor: 'pointer',
-                    background: isActive ? 'rgba(255,153,51,0.12)' : 'transparent',
+                    background: isActive ? 'linear-gradient(135deg, rgba(255,153,51,0.18) 0%, rgba(255,153,51,0.06) 100%)' : 'transparent',
                     color: isActive ? 'var(--tiranga-saffron)' : 'var(--text-secondary)',
                     fontSize: 12,
                     fontWeight: isActive ? 700 : 500,
                     marginBottom: 3,
-                    transition: 'all 0.14s ease',
+                    transition: 'all 0.18s cubic-bezier(0.16, 1, 0.3, 1)',
                     position: 'relative',
                     borderLeft: isCollapsed ? 'none' : (isActive ? '2px solid var(--tiranga-saffron)' : '2px solid transparent'),
                   }}
                   onMouseEnter={(e) => {
-                    if (!isActive) (e.currentTarget as HTMLElement).style.background = 'var(--bg-active)';
+                    if (!isActive) (e.currentTarget as HTMLElement).style.background = 'var(--glass-bg-card-hover)';
                   }}
                   onMouseLeave={(e) => {
                     if (!isActive) (e.currentTarget as HTMLElement).style.background = 'transparent';
@@ -392,20 +392,23 @@ export const Sidebar: React.FC<SidebarProps> = ({
                 >
                   <span
                     style={{
-                      width: 28,
-                      height: 28,
-                      display: 'flex',
+                      width: 30,
+                      height: 30,
+                      display: 'inline-flex',
                       alignItems: 'center',
                       justifyContent: 'center',
                       flexShrink: 0,
-                      borderRadius: 6,
-                      background: isCollapsed && isActive ? 'rgba(255,153,51,0.18)' : 'transparent',
+                      borderRadius: 7,
+                      background: isActive ? 'rgba(255,153,51,0.22)' : 'var(--glass-bg-subtle)',
+                      border: isActive ? '1px solid rgba(255,153,51,0.45)' : '1px solid var(--glass-border)',
                       color: isActive ? 'var(--tiranga-saffron)' : 'inherit',
+                      boxShadow: isActive ? '0 0 12px rgba(255,153,51,0.25)' : 'var(--glass-inset)',
+                      transition: 'all 0.18s ease'
                     }}
                   >
                     {item.icon}
                   </span>
-                  {!isCollapsed && <span style={{ flex: 1, textAlign: 'left' }}>{item.label}</span>}
+                  {!isCollapsed && <span style={{ flex: 1, textAlign: 'left', lineHeight: 1.2 }}>{item.label}</span>}
                   {!isCollapsed && item.badge && (
                     <span
                       style={{
@@ -416,6 +419,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
                         padding: '1px 6px',
                         borderRadius: 8,
                         flexShrink: 0,
+                        lineHeight: 1.2
                       }}
                     >
                       {item.badge}
@@ -439,7 +443,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
             })}
           </div>
 
-          <div style={{ height: 1, background: 'var(--border-subtle)', margin: isCollapsed ? '4px 8px' : '0 12px' }} />
+          <div style={{ height: 1, background: 'var(--glass-border)', margin: isCollapsed ? '4px 8px' : '0 12px' }} />
 
           {/* Quick Actions */}
           <div style={{ padding: isCollapsed ? '10px 6px' : '10px 8px' }}>
@@ -459,22 +463,24 @@ export const Sidebar: React.FC<SidebarProps> = ({
                 alignItems: 'center',
                 gap: isCollapsed ? 0 : 10,
                 justifyContent: isCollapsed ? 'center' : 'flex-start',
-                padding: isCollapsed ? '7px 0' : '8px 10px',
-                borderRadius: 7,
+                padding: isCollapsed ? '5px 0' : '6px 8px',
+                borderRadius: 8,
                 cursor: 'pointer',
                 marginBottom: 3,
-                background: 'rgba(234, 88, 12, 0.12)',
-                border: '1px solid rgba(249,115,22,0.3)',
+                background: 'linear-gradient(135deg, rgba(234, 88, 12, 0.16) 0%, rgba(234, 88, 12, 0.06) 100%)',
+                border: '1px solid rgba(249,115,22,0.35)',
                 color: '#f97316',
                 fontSize: 12,
                 fontWeight: 600,
-                transition: 'all 0.14s ease',
+                transition: 'all 0.18s ease',
               }}
+              onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = 'linear-gradient(135deg, rgba(234, 88, 12, 0.25) 0%, rgba(234, 88, 12, 0.12) 100%)'; }}
+              onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = 'linear-gradient(135deg, rgba(234, 88, 12, 0.16) 0%, rgba(234, 88, 12, 0.06) 100%)'; }}
             >
-              <span style={{ width: 28, height: 28, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+              <span style={{ width: 30, height: 30, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, borderRadius: 7, background: 'rgba(234, 88, 12, 0.22)', border: '1px solid rgba(249,115,22,0.4)' }}>
                 <Send size={15} />
               </span>
-              {!isCollapsed && <span>+ Report Incident</span>}
+              {!isCollapsed && <span style={{ lineHeight: 1.2 }}>+ Report Incident</span>}
             </button>
 
             {/* Sync Feeds */}
@@ -488,8 +494,8 @@ export const Sidebar: React.FC<SidebarProps> = ({
                 alignItems: 'center',
                 gap: isCollapsed ? 0 : 10,
                 justifyContent: isCollapsed ? 'center' : 'flex-start',
-                padding: isCollapsed ? '7px 0' : '8px 10px',
-                borderRadius: 7,
+                padding: isCollapsed ? '5px 0' : '6px 8px',
+                borderRadius: 8,
                 cursor: isSyncingFeeds ? 'not-allowed' : 'pointer',
                 background: 'transparent',
                 border: 'none',
@@ -497,20 +503,20 @@ export const Sidebar: React.FC<SidebarProps> = ({
                 fontSize: 12,
                 fontWeight: 500,
                 opacity: isSyncingFeeds ? 0.6 : 1,
-                transition: 'all 0.14s ease',
+                transition: 'all 0.18s ease',
                 marginBottom: 3,
               }}
-              onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = 'var(--bg-active)'; }}
+              onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = 'var(--glass-bg-card-hover)'; }}
               onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = 'transparent'; }}
             >
-              <span style={{ width: 28, height: 28, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+              <span style={{ width: 30, height: 30, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, borderRadius: 7, background: 'var(--glass-bg-subtle)', border: '1px solid var(--glass-border)' }}>
                 <RefreshCw size={15} color="#38bdf8" className={isSyncingFeeds ? 'spin-anim' : ''} />
               </span>
-              {!isCollapsed && <span>{isSyncingFeeds ? 'Syncing...' : 'Sync Feeds'}</span>}
+              {!isCollapsed && <span style={{ lineHeight: 1.2 }}>{isSyncingFeeds ? 'Syncing...' : 'Sync Feeds'}</span>}
             </button>
           </div>
 
-          <div style={{ height: 1, background: 'var(--border-subtle)', margin: isCollapsed ? '4px 8px' : '0 12px' }} />
+          <div style={{ height: 1, background: 'var(--glass-border)', margin: isCollapsed ? '4px 8px' : '0 12px' }} />
 
           {/* Tools Section */}
           <div style={{ padding: isCollapsed ? '10px 6px' : '10px 8px' }}>
@@ -522,7 +528,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
 
             {[
               { icon: <Radio size={15} color="#38bdf8" />, label: 'Live Feeds', action: onOpenFeedsModal, title: 'NASA EONET, USGS, GDACS' },
-              { icon: <Activity size={15} color="#16a34a" />, label: 'System Health', action: onOpenMetricsModal, title: 'API Health (9/9)', extra: <span style={{ background: '#16a34a', color: '#fff', fontSize: 9, padding: '1px 5px', borderRadius: 8 }}>9/9</span> },
+              { icon: <Activity size={15} color="#16a34a" />, label: 'System Health', action: onOpenMetricsModal, title: 'API Health (9/9)', extra: <span style={{ background: '#16a34a', color: '#fff', fontSize: 9, padding: '1px 5px', borderRadius: 8, lineHeight: 1.2 }}>9/9</span> },
               { icon: <Sliders size={15} color="#FF9933" />, label: 'AI Simulation', action: onOpenSimulationModal, title: 'Disaster Simulation Drill' },
               { icon: <Rss size={15} color="#f85149" />, label: 'CAP Broadcast', action: onOpenBroadcastModal, title: 'NDMA Emergency Broadcast' },
               { icon: <FileText size={15} color="var(--text-secondary)" />, label: 'Audit Logs', action: onOpenAuditModal, title: 'Operational Audit Trail' },
@@ -537,8 +543,8 @@ export const Sidebar: React.FC<SidebarProps> = ({
                   alignItems: 'center',
                   gap: isCollapsed ? 0 : 10,
                   justifyContent: isCollapsed ? 'center' : 'flex-start',
-                  padding: isCollapsed ? '7px 0' : '8px 10px',
-                  borderRadius: 7,
+                  padding: isCollapsed ? '5px 0' : '6px 8px',
+                  borderRadius: 8,
                   border: 'none',
                   cursor: 'pointer',
                   background: 'transparent',
@@ -546,15 +552,15 @@ export const Sidebar: React.FC<SidebarProps> = ({
                   fontSize: 12,
                   fontWeight: 500,
                   marginBottom: 3,
-                  transition: 'all 0.14s ease',
+                  transition: 'all 0.18s ease',
                 }}
-                onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = 'var(--bg-active)'; }}
+                onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = 'var(--glass-bg-card-hover)'; }}
                 onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = 'transparent'; }}
               >
-                <span style={{ width: 28, height: 28, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                <span style={{ width: 30, height: 30, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, borderRadius: 7, background: 'var(--glass-bg-subtle)', border: '1px solid var(--glass-border)' }}>
                   {tool.icon}
                 </span>
-                {!isCollapsed && <span style={{ flex: 1, textAlign: 'left' }}>{tool.label}</span>}
+                {!isCollapsed && <span style={{ flex: 1, textAlign: 'left', lineHeight: 1.2 }}>{tool.label}</span>}
                 {!isCollapsed && tool.extra}
               </button>
             ))}
@@ -562,7 +568,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
         </div>
 
         {/* Bottom Section: Telemetry + User Controls */}
-        <div style={{ borderTop: '1px solid var(--border-subtle)', flexShrink: 0 }}>
+        <div style={{ borderTop: '1px solid var(--glass-border)', flexShrink: 0, background: 'var(--glass-bg-subtle)' }}>
           {/* WS Connection Status */}
           {!isCollapsed && (
             <div
@@ -576,7 +582,9 @@ export const Sidebar: React.FC<SidebarProps> = ({
                 fontWeight: 600,
               }}
             >
-              {wsConnected ? <Wifi size={12} /> : <WifiOff size={12} />}
+              <span style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }}>
+                {wsConnected ? <Wifi size={12} /> : <WifiOff size={12} />}
+              </span>
               <span>{wsConnected ? 'WebSocket Live' : 'Connecting...'}</span>
               {totalActiveCount > 0 && (
                 <span
@@ -584,6 +592,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
                     marginLeft: 'auto',
                     background: 'rgba(239,68,68,0.15)',
                     color: '#ef4444',
+                    border: '1px solid rgba(239,68,68,0.3)',
                     padding: '1px 6px',
                     borderRadius: 8,
                     fontSize: 9,
@@ -596,30 +605,41 @@ export const Sidebar: React.FC<SidebarProps> = ({
             </div>
           )}
 
-          {/* Dedicated Theme Switch Card */}
+          {/* Dedicated Liquid Glass Theme Switch Card */}
           <div
             onClick={onToggleTheme}
             style={{
               margin: isCollapsed ? '6px 4px' : '6px 10px',
-              padding: isCollapsed ? '6px 4px' : '7px 10px',
-              borderRadius: 6,
-              background: 'var(--bg-card)',
-              border: '1px solid var(--border-subtle)',
+              padding: isCollapsed ? '6px 4px' : '6px 10px',
+              borderRadius: 8,
+              background: 'var(--glass-bg-card)',
+              backdropFilter: 'blur(16px)',
+              WebkitBackdropFilter: 'blur(16px)',
+              border: '1px solid var(--glass-border-light)',
               cursor: 'pointer',
               display: 'flex',
               alignItems: 'center',
               justifyContent: isCollapsed ? 'center' : 'space-between',
-              transition: 'all 0.15s ease',
-              userSelect: 'none'
+              transition: 'all 0.18s cubic-bezier(0.16, 1, 0.3, 1)',
+              userSelect: 'none',
+              boxShadow: 'var(--glass-shadow-sm)'
             }}
             title={theme === 'dark' ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
-            onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = 'var(--bg-active)'; }}
-            onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = 'var(--bg-card)'; }}
+            onMouseEnter={(e) => {
+              (e.currentTarget as HTMLElement).style.background = 'var(--glass-bg-card-hover)';
+              (e.currentTarget as HTMLElement).style.borderColor = 'var(--glass-border-highlight)';
+            }}
+            onMouseLeave={(e) => {
+              (e.currentTarget as HTMLElement).style.background = 'var(--glass-bg-card)';
+              (e.currentTarget as HTMLElement).style.borderColor = 'var(--glass-border-light)';
+            }}
           >
             <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-              {theme === 'dark' ? <Sun size={15} color="#FF9933" /> : <Moon size={15} color="#2563eb" />}
+              <div style={{ width: 22, height: 22, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                {theme === 'dark' ? <Sun size={15} color="#FF9933" /> : <Moon size={15} color="#2563eb" />}
+              </div>
               {!isCollapsed && (
-                <span style={{ fontSize: 11, fontWeight: 600, color: 'var(--text-primary)' }}>
+                <span style={{ fontSize: 11, fontWeight: 600, color: 'var(--text-primary)', lineHeight: 1 }}>
                   {theme === 'dark' ? 'Light Mode' : 'Dark Mode'}
                 </span>
               )}
@@ -629,11 +649,12 @@ export const Sidebar: React.FC<SidebarProps> = ({
                 style={{
                   fontSize: 9,
                   fontWeight: 700,
-                  padding: '1px 6px',
+                  padding: '2px 6px',
                   borderRadius: 8,
-                  background: 'var(--bg-surface)',
-                  border: '1px solid var(--border-default)',
-                  color: 'var(--text-secondary)'
+                  background: 'var(--glass-bg-subtle)',
+                  border: '1px solid var(--glass-border-light)',
+                  color: 'var(--text-secondary)',
+                  lineHeight: 1
                 }}
               >
                 {theme === 'dark' ? '☀️ Day' : '🌙 Night'}
@@ -641,37 +662,64 @@ export const Sidebar: React.FC<SidebarProps> = ({
             )}
           </div>
 
-          {/* Controls Bar */}
+          {/* User Profile Pill when Expanded */}
+          {!isCollapsed && (
+            <div
+              onClick={() => handleAction(onOpenAuthModal)}
+              style={{
+                margin: '4px 10px 6px',
+                padding: '5px 9px',
+                borderRadius: 7,
+                background: 'var(--glass-bg-subtle)',
+                border: '1px solid var(--glass-border)',
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                gap: 8,
+                transition: 'all 0.15s ease'
+              }}
+              title="User Account & Session"
+              onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = 'var(--glass-bg-card-hover)'; }}
+              onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = 'var(--glass-bg-subtle)'; }}
+            >
+              <div style={{ width: 22, height: 22, borderRadius: 5, background: 'rgba(56, 189, 248, 0.15)', border: '1px solid rgba(56, 189, 248, 0.3)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                <UserCheck size={12} color="#38bdf8" />
+              </div>
+              <span style={{ fontSize: 10.5, fontWeight: 600, color: 'var(--text-primary)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', flex: 1, lineHeight: 1 }}>
+                {currentUser?.username === 'guest_citizen' ? 'Guest Citizen' : currentUser?.fullName}
+              </span>
+              <span style={{ fontSize: 9, fontWeight: 700, color: 'var(--accent-cyan)', fontFamily: 'var(--font-mono)' }}>
+                {currentUser?.role || 'CITIZEN'}
+              </span>
+            </div>
+          )}
+
+          {/* Controls Bar: Uniform 32x32 Icon Buttons */}
           <div
             style={{
-              padding: isCollapsed ? '8px 6px 12px' : '6px 10px 10px',
+              padding: isCollapsed ? '8px 6px 12px' : '4px 10px 10px',
               display: 'flex',
               flexDirection: isCollapsed ? 'column' : 'row',
               alignItems: 'center',
               justifyContent: isCollapsed ? 'center' : 'space-between',
-              gap: isCollapsed ? 4 : 2,
+              gap: isCollapsed ? 6 : 4,
             }}
           >
-            {/* Alert Center Button */}
+            {/* 1. Alert Center */}
             <button
               onClick={() => handleAction(onOpenAlertCenter)}
               title="Alert Center Notifications"
               aria-label="Alert Center"
+              className="btn-icon"
               style={{
                 width: 32,
                 height: 32,
                 position: 'relative',
-                background: 'none',
-                border: 'none',
-                cursor: 'pointer',
-                borderRadius: 6,
+                borderRadius: 7,
                 color: '#FF9933',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
+                background: 'var(--glass-bg-subtle)',
+                border: '1px solid var(--glass-border)'
               }}
-              onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = 'var(--bg-active)'; }}
-              onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = 'none'; }}
             >
               <Bell size={16} />
               {unreadAlertCount > 0 && (
@@ -690,31 +738,25 @@ export const Sidebar: React.FC<SidebarProps> = ({
               )}
             </button>
 
-            {/* Audio Toggle */}
+            {/* 2. Audio Toggle */}
             <button
               onClick={() => setAudioMuted(!audioMuted)}
               title={audioMuted ? 'Unmute alerts audio' : 'Mute alerts audio'}
               aria-label="Toggle Audio"
+              className="btn-icon"
               style={{
                 width: 32,
                 height: 32,
-                background: 'none',
-                border: 'none',
-                cursor: 'pointer',
-                borderRadius: 6,
+                borderRadius: 7,
                 color: audioMuted ? 'var(--text-muted)' : '#38bdf8',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
+                background: 'var(--glass-bg-subtle)',
+                border: '1px solid var(--glass-border)'
               }}
-              onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = 'var(--bg-active)'; }}
-              onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = 'none'; }}
             >
               {audioMuted ? <VolumeX size={16} /> : <Volume2 size={16} />}
             </button>
 
-
-            {/* Offline Status */}
+            {/* 3. Offline Status (Always 32x32 Compact) */}
             <div
               title="PWA Offline/Online Sync Telemetry"
               style={{
@@ -723,60 +765,31 @@ export const Sidebar: React.FC<SidebarProps> = ({
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
+                borderRadius: 7,
+                background: 'var(--glass-bg-subtle)',
+                border: '1px solid var(--glass-border)'
               }}
             >
-              <OfflineIndicator compact={isCollapsed} />
+              <OfflineIndicator compact={true} />
             </div>
 
-            {/* User / Auth */}
-            {!isCollapsed ? (
-              <button
-                onClick={() => handleAction(onOpenAuthModal)}
-                title="Account / Session"
-                style={{
-                  background: 'none',
-                  border: 'none',
-                  cursor: 'pointer',
-                  padding: '4px 6px',
-                  borderRadius: 6,
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: 5,
-                  color: 'var(--text-secondary)',
-                  fontSize: 11,
-                  maxWidth: 100,
-                  marginLeft: 'auto',
-                }}
-                onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = 'var(--bg-active)'; }}
-                onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = 'none'; }}
-              >
-                <UserCheck size={14} color="#38bdf8" />
-                <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', fontSize: 10 }}>
-                  {currentUser?.username === 'guest_citizen' ? 'Sign In' : currentUser?.fullName?.split(' ')[0]}
-                </span>
-              </button>
-            ) : (
-              <button
-                onClick={() => handleAction(onOpenAuthModal)}
-                title="User Account"
-                style={{
-                  width: 32,
-                  height: 32,
-                  background: 'none',
-                  border: 'none',
-                  cursor: 'pointer',
-                  borderRadius: 6,
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  color: 'var(--text-secondary)',
-                }}
-                onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = 'var(--bg-active)'; }}
-                onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = 'none'; }}
-              >
-                <UserCheck size={16} color="#38bdf8" />
-              </button>
-            )}
+            {/* 4. User Account / Session */}
+            <button
+              onClick={() => handleAction(onOpenAuthModal)}
+              title={currentUser?.username === 'guest_citizen' ? 'Sign In / Register' : `Account: ${currentUser?.fullName}`}
+              aria-label="User Account"
+              className="btn-icon"
+              style={{
+                width: 32,
+                height: 32,
+                borderRadius: 7,
+                color: 'var(--text-secondary)',
+                background: 'var(--glass-bg-subtle)',
+                border: '1px solid var(--glass-border)'
+              }}
+            >
+              <UserCheck size={16} color="#38bdf8" />
+            </button>
           </div>
         </div>
       </div>
@@ -1039,8 +1052,10 @@ export const Sidebar: React.FC<SidebarProps> = ({
                 position: 'relative',
               }}
             >
-              {item.icon}
-              <span>{item.label}</span>
+              <div style={{ width: 20, height: 20, display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }}>
+                {item.icon}
+              </div>
+              <span style={{ lineHeight: 1 }}>{item.label}</span>
               {item.badge && (
                 <span
                   style={{
@@ -1077,8 +1092,10 @@ export const Sidebar: React.FC<SidebarProps> = ({
             borderTop: '2px solid transparent',
           }}
         >
-          <Bell size={17} />
-          <span>Alerts</span>
+          <div style={{ width: 20, height: 20, display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }}>
+            <Bell size={17} />
+          </div>
+          <span style={{ lineHeight: 1 }}>Alerts</span>
           {unreadAlertCount > 0 && (
             <span
               style={{

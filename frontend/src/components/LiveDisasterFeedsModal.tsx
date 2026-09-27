@@ -166,39 +166,39 @@ export const LiveDisasterFeedsModal: React.FC<LiveDisasterFeedsModalProps> = ({ 
           }}
         >
           {/* Segmented Feed Tabs */}
-          <div className="segmented-control" style={{ display: 'flex', gap: 4 }}>
+          <div className="segmented-control" style={{ display: 'flex', gap: 4, overflowX: 'auto', maxWidth: '100%', scrollbarWidth: 'none', padding: 2 }}>
             <button
               onClick={() => setActiveTab('all')}
               className={`segmented-btn ${activeTab === 'all' ? 'active' : ''}`}
-              style={{ fontSize: 11, padding: '5px 10px' }}
+              style={{ fontSize: 11, padding: '5px 10px', flexShrink: 0, whiteSpace: 'nowrap' }}
             >
               All Feeds ({totalCount})
             </button>
             <button
               onClick={() => setActiveTab('nasa')}
               className={`segmented-btn ${activeTab === 'nasa' ? 'active' : ''}`}
-              style={{ fontSize: 11, padding: '5px 10px' }}
+              style={{ fontSize: 11, padding: '5px 10px', flexShrink: 0, whiteSpace: 'nowrap' }}
             >
               🛰️ NASA EONET ({nasaEvents.length})
             </button>
             <button
               onClick={() => setActiveTab('usgs')}
               className={`segmented-btn ${activeTab === 'usgs' ? 'active' : ''}`}
-              style={{ fontSize: 11, padding: '5px 10px' }}
+              style={{ fontSize: 11, padding: '5px 10px', flexShrink: 0, whiteSpace: 'nowrap' }}
             >
               ⚡ USGS Quakes ({usgsEvents.length})
             </button>
             <button
               onClick={() => setActiveTab('gdacs')}
               className={`segmented-btn ${activeTab === 'gdacs' ? 'active' : ''}`}
-              style={{ fontSize: 11, padding: '5px 10px' }}
+              style={{ fontSize: 11, padding: '5px 10px', flexShrink: 0, whiteSpace: 'nowrap' }}
             >
               🌍 GDACS ({gdacsAlerts.length})
             </button>
             <button
               onClick={() => setActiveTab('weather')}
               className={`segmented-btn ${activeTab === 'weather' ? 'active' : ''}`}
-              style={{ fontSize: 11, padding: '5px 10px' }}
+              style={{ fontSize: 11, padding: '5px 10px', flexShrink: 0, whiteSpace: 'nowrap' }}
             >
               🌦️ Weather Radar
             </button>
