@@ -20,9 +20,11 @@ FROM eclipse-temurin:21-jre-alpine
 
 WORKDIR /app
 
-# Install curl for container liveness and readiness healthchecks
+# Install curl for container liveness and readiness healthchecks, create writable data folder
 RUN apk add --no-cache curl && \
-    addgroup -S aegisops && adduser -S aegisops -G aegisops
+    addgroup -S aegisops && adduser -S aegisops -G aegisops && \
+    mkdir -p /app/data && \
+    chown -R aegisops:aegisops /app
 
 # Switch to non-root secure execution user
 USER aegisops:aegisops
@@ -38,6 +40,6 @@ ENV JAVA_OPTS="-XX:+UseContainerSupport -XX:MaxRAMPercentage=75.0 -XX:+ExitOnOut
 
 # Container liveness & readiness healthcheck
 HEALTHCHECK --interval=15s --timeout=5s --start-period=30s --retries=3 \
-  CMD curl -f http://localhost:4000/actuator/health || curl -f http://localhost:4000/api/system/health || exit 1
+  CMD curl -f http://localhost:${PORT:-4000}/actuator/health || curl -f http://localhost:${PORT:-4000}/api/system/health || exit 1
 
 ENTRYPOINT ["sh", "-c", "java $JAVA_OPTS -jar app.jar"]
